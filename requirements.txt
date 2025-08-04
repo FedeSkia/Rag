@@ -1,0 +1,8 @@
+langchain-text-splitters
+langchain-community
+langgraph
+langchain-core
+langchain-postgres
+beautifulsoup4
+langchain-ollama
+psycopg2
