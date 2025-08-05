@@ -6,4 +6,11 @@ from graph import create_graph
 if __name__ == '__main__':
     config: RunnableConfig = {"configurable": {"thread_id": random()}}
     graph = create_graph()
-    print(graph.invoke({"question": "What is it Tool use in the context of LLM?"}, config=config))
+    input_message = "What is Task Decomposition?"
+
+    for step in graph.stream(
+            {"messages": [{"role": "user", "content": input_message}]},
+            stream_mode="values",
+    ):
+        print(step)
+
