@@ -6,3 +6,5 @@ langchain-postgres
 beautifulsoup4
 langchain-ollama
 psycopg2
+fastapi
+uvicorn
