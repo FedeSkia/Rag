@@ -12,6 +12,7 @@ from main import launch_graph
 
 app = FastAPI()
 
+
 class InputData(BaseModel):
     content: str
 
@@ -31,14 +32,12 @@ if __name__ == '__main__':
     config: RunnableConfig = {"configurable": {"thread_id": random()}}
     graph = create_graph()
 
-    # curl example: curl --location 'localhost:8000/invoke' \
-    # --header 'Content-Type: application/json' \
-    # --data '{
-    #     "content": "hello"
-    # }'
+
+    # curl -N -X POST http://localhost:8000/invoke \
+    #   -H "Content-Type: application/json" \
+    #   -d '{"content": "hello"}'
     @app.post("/invoke")
     async def invoke(data: InputData):
-
         return StreamingResponse(
             launch_graph(graph, data.content),
             media_type="text/event-stream",
