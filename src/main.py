@@ -28,9 +28,6 @@ class InputData(BaseModel):
     content: str
 
 
-# curl -N -X POST http://localhost:8000/invoke \
-#   -H "Content-Type: application/json" \
-#   -d '{"content": "hello"}'
 @app.post("/invoke")
 async def invoke(data: InputData):
     return StreamingResponse(

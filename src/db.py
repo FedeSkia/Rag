@@ -26,7 +26,7 @@ def index_document(vector_store: PGVector):
 
 def create_vector_store() -> PGVector:
     embeddings = OllamaEmbeddings(
-        model="qwen3:0.6b",
+        model=config.EMBEDDING_MODEL,
     )
     DB_CONN = "postgresql://" + config.DB_HOST + ":" + config.DB_PWD + "@" + config.DB_HOST + ":" + config.DB_PORT + "/postgres?sslmode=disable"
     return PGVector(
