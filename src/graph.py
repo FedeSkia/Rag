@@ -30,7 +30,8 @@ def retrieve(query: str):
 # Step 1: Generate an AIMessage that may include a tool-call to be sent.
 def query_or_respond(state: State):
     """Generate tool call for retrieval or respond."""
-    chat_model = init_chat_model(model=config.CHAT_MODEL, reasoning=True, num_predict=1000, temperature=0.0)
+    print(config.LLM_HOST)
+    chat_model = init_chat_model(base_url=config.LLM_HOST, model=config.CHAT_MODEL, reasoning=True, num_predict=1000, temperature=0.0)
     llm_with_tools = chat_model.bind_tools([retrieve])
     response = llm_with_tools.invoke(state["messages"])
     # MessagesState appends messages to state instead of overwriting
@@ -69,7 +70,7 @@ def generate(state: State):
     prompt = [SystemMessage(system_message_content)] + conversation_messages
 
     # Run
-    chat_model = init_chat_model(model=config.MODEL, reasoning=True, num_predict=1000, temperature=0.0)
+    chat_model = init_chat_model(base_url=config.LLM_HOST, model=config.CHAT_MODEL, reasoning=True, num_predict=1000, temperature=0.0)
     response = chat_model.invoke(prompt)
     return {"messages": [response]}
 
