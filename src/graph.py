@@ -6,7 +6,7 @@ from langchain_core.tools import tool
 from langgraph.graph import END, StateGraph, add_messages
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
-
+import config
 from db import create_vector_store
 
 
@@ -30,7 +30,7 @@ def retrieve(query: str):
 # Step 1: Generate an AIMessage that may include a tool-call to be sent.
 def query_or_respond(state: State):
     """Generate tool call for retrieval or respond."""
-    chat_model = init_chat_model(model="ollama:qwen3:0.6b", reasoning=True, num_predict=1000, temperature=0.0)
+    chat_model = init_chat_model(model=config.MODEL, reasoning=True, num_predict=1000, temperature=0.0)
     llm_with_tools = chat_model.bind_tools([retrieve])
     response = llm_with_tools.invoke(state["messages"])
     # MessagesState appends messages to state instead of overwriting
@@ -69,7 +69,7 @@ def generate(state: State):
     prompt = [SystemMessage(system_message_content)] + conversation_messages
 
     # Run
-    chat_model = init_chat_model(model="ollama:qwen3:0.6b", reasoning=True, num_predict=1000, temperature=0.0)
+    chat_model = init_chat_model(model=config.MODEL, reasoning=True, num_predict=1000, temperature=0.0)
     response = chat_model.invoke(prompt)
     return {"messages": [response]}
 

@@ -1,8 +1,10 @@
+import bs4
 from langchain_community.document_loaders import WebBaseLoader
+from langchain_ollama import OllamaEmbeddings
 from langchain_postgres import PGVector
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_ollama import OllamaEmbeddings
-import bs4
+
+import config
 
 
 def index_document(vector_store: PGVector):
@@ -26,8 +28,9 @@ def create_vector_store() -> PGVector:
     embeddings = OllamaEmbeddings(
         model="qwen3:0.6b",
     )
+    DB_CONN = "postgresql://" + config.DB_HOST + ":" + config.DB_PWD + "@" + config.DB_HOST + ":" + config.DB_PORT + "/postgres?sslmode=disable"
     return PGVector(
         embeddings=embeddings,
         collection_name="my_docs",
-        connection="postgresql://langgraph:langgraph@localhost:5433/postgres?sslmode=disable",
+        connection=DB_CONN,
     )

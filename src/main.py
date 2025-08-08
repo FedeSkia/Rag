@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from langchain_core.runnables import RunnableConfig
 from pydantic import BaseModel
-
+import config
 from graph import create_graph
 from graph import launch_graph
 
@@ -14,7 +14,7 @@ app = FastAPI()
 # initilizing our application
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Your frontend URL
+    allow_origins=[config.ALLOW_ORIGINS],  # Your frontend URL
     allow_credentials=True,
     allow_methods=["*"],  # Allows all methods
     allow_headers=["*"],  # Allows all headers
