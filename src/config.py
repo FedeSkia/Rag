@@ -2,7 +2,13 @@ import os
 
 from dotenv import load_dotenv
 
-load_dotenv()
+env = os.getenv("APP_ENV", "local").strip()
+env_file = f"{env}"
+print("ENV file=", env_file)
+# if not env_file:
+#    print("No env file found. Exit.")
+#    exit(0)
+load_dotenv(dotenv_path=env_file)
 
 DB_HOST = os.getenv("DB_HOST")
 DB_PORT = int(os.getenv("DB_PORT", "5432"))

@@ -7,7 +7,7 @@ WORKDIR /app
 COPY ./docker/rag_app/entrypoint_app.sh .
 RUN chmod +x entrypoint_app.sh
 COPY ../../requirements.txt .
-COPY ../../.env-docker .env
+COPY ../../.env.local.docker .
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 # Copy the application source code
