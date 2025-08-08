@@ -91,3 +91,12 @@ def create_graph() -> CompiledStateGraph:
     graph_builder.add_edge("generate", END)
 
     return graph_builder.compile()
+
+
+async def launch_graph(graph, input_message) -> str:
+    for message_chunk, metadata in graph.stream(
+            {"messages": input_message},
+            stream_mode="messages",
+    ):
+        if message_chunk.content:
+            yield message_chunk.content

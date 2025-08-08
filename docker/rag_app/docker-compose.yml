@@ -1,0 +1,66 @@
+services:
+
+  rag-app:
+    build:
+      context: ../..
+      dockerfile: ./docker/rag_app/Dockerfile
+    ports:
+      - "8000:8000"
+    networks:
+      - ollama-net
+    depends_on:
+      ollama:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+
+  ollama:
+    build: ../ollama
+    container_name: ollama-rag-app
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    restart: unless-stopped
+    environment:
+      - OLLAMA_ORIGINS=*
+      - OLLAMA_DEBUG=1 #useful to output logs for the incoming prompts
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - ollama-net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
+
+  postgres:
+    container_name: postgres-rag-app
+    image: ec69f00c656adaffba1c7a493414c775c92770b0e8415d869cf8537dffb93c44
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: langgraph
+      POSTGRES_USER: langgraph
+    ports:
+      - "5433:5432"
+    networks:
+      - ollama-net
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "langgraph" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+
+networks:
+  ollama-net:
+    driver: bridge
+
+volumes:
+  ollama-data:
+    driver: local
