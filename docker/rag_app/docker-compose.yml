@@ -1,6 +1,7 @@
 services:
 
   rag-app:
+    image: rag-langchain-app:latest
     build:
       context: ../..
       dockerfile: ./docker/rag_app/Dockerfile
