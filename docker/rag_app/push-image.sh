@@ -1,10 +1,10 @@
 #!/bin/bash
 
-AWS_REGION="eu-west-1"  # Cambia con la tua region
-AWS_ACCOUNT_ID="507881105499"  # Il tuo AWS Account ID
-IMAGE_NAME="rag-langchain-app"
-ECR_REPOSITORY="rag-app"  # Usa il repository esistente
-SERVICE_TAG="rag-langchain-app-latest"  # Tag specifico per questo servizio
+AWS_REGION="${AWS_REGION:-eu-west-1}"
+AWS_ACCOUNT_ID="${AWS_ACCOUNT_ID:-507881105499}"
+IMAGE_NAME="${IMAGE_NAME:-rag-langchain-app}"
+ECR_REPOSITORY="${ECR_REPOSITORY:-rag-app}"
+SERVICE_TAG="${SERVICE_TAG:-rag-langchain-app-latest}"
 
 # 1. Build image Docker
 echo -e "📦 Building Docker image..."
@@ -24,5 +24,5 @@ echo -e "⬆️ Pushing image to ECR..."
 docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$SERVICE_TAG
 
 # 6. Update del servizio ECS (se già exists)
-#echo -e "🔄 Updating ECS service..."
-#aws ecs update-service --cluster $CLUSTER_NAME --service $SERVICE_NAME --force-new-deployment --region $AWS_REGION
+echo -e "🔄 Updating ECS service..."
+aws ecs update-service --cluster $CLUSTER_NAME --service $SERVICE_NAME --force-new-deployment --region $AWS_REGION
