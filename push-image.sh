@@ -5,10 +5,11 @@ AWS_ACCOUNT_ID="${AWS_ACCOUNT_ID:-507881105499}"
 IMAGE_NAME="${IMAGE_NAME:-rag-langchain-app}"
 ECR_REPOSITORY="${ECR_REPOSITORY:-rag-app}"
 SERVICE_TAG="${SERVICE_TAG:-rag-langchain-app-latest}"
-
+CLUSTER_NAME="${CLUSTER_NAME:-my-rag-app-cluster}"
+SERVICE_NAME="${SERVICE_NAME:-rag-app-task}"
 # 1. Build image Docker
 echo -e "📦 Building Docker image..."
-docker compose build rag-app
+docker build -f ./docker/rag_app/Dockerfile --platform linux/amd64 -t $IMAGE_NAME .
 
 # 2. Login ad ECR
 echo -e "🔐 Logging into ECR..."

@@ -28,7 +28,7 @@ class InputData(BaseModel):
     content: str
 
 
-@app.post("/invoke")
+@app.post("/api/invoke")
 async def invoke(data: InputData):
     return StreamingResponse(
         launch_graph(graph, data.content),
