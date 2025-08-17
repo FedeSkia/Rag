@@ -3,6 +3,7 @@ from typing import TypedDict, List, Annotated
 from langchain.chat_models import init_chat_model
 from langchain_core.messages import SystemMessage, BaseMessage
 from langchain_core.tools import tool
+from langchain_ollama import ChatOllama
 from langgraph.graph import END, StateGraph, add_messages
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
@@ -30,7 +31,10 @@ def retrieve(query: str):
 # Step 1: Generate an AIMessage that may include a tool-call to be sent.
 def query_or_respond(state: State):
     """Generate tool call for retrieval or respond."""
-    chat_model = init_chat_model(base_url=config.LLM_HOST, model=config.CHAT_MODEL, reasoning=True, num_predict=1000, temperature=0.0)
+    chat_model = ChatOllama(
+        model=config.CHAT_MODEL,
+        base_url=config.LLM_HOST
+    )
     llm_with_tools = chat_model.bind_tools([retrieve])
     response = llm_with_tools.invoke(state["messages"])
     # MessagesState appends messages to state instead of overwriting
