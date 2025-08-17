@@ -26,3 +26,7 @@ docker tag $IMAGE_NAME:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/
 
 echo -e "⬆️ Pushing image to ECR..."
 docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$SERVICE_TAG
+
+# 6. Update del servizio ECS (se già exists)
+echo -e "🔄 Updating ECS service..."
+aws ecs update-service --cluster $CLUSTER_NAME --service $SERVICE_NAME --force-new-deployment --region $AWS_REGION
