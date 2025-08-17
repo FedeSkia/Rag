@@ -9,4 +9,4 @@ To work locally launch the docker-compose
 # Test
 
 to verify if the LLM reply use:
-curl -N -X POST http://localhost:8000/invoke   -H "Content-Type: application/json"   -d '{"content": "hello"}' 
+curl -N -X POST http://localhost:8000/api/invoke   -H "Content-Type: application/json"   -d '{"content": "hello"}' 
