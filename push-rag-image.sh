@@ -9,7 +9,7 @@ CLUSTER_NAME="${CLUSTER_NAME:-my-rag-app-cluster}"
 SERVICE_NAME="${SERVICE_NAME:-rag-app-task}"
 # 1. Build image Docker
 echo -e "📦 Building Docker image..."
-docker build -f ./docker/rag_app/Dockerfile --build-arg APP_ENV=env.prod.docker --platform linux/amd64 -t $IMAGE_NAME .
+docker build -f ./docker/rag_app/Dockerfile --build-arg APP_ENV=.env.prod.docker --platform linux/amd64 -t $IMAGE_NAME .
 
 # 2. Login ad ECR
 echo -e "🔐 Logging into ECR..."
