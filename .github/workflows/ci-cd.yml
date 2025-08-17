@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 env:
-  # ---- Build/Push parameters consumed by push-image.sh ----
+  # ---- Build/Push parameters consumed by push-rag-image.sh ----
   AWS_REGION: eu-west-1
   AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}      # e.g., 507881105499
   IMAGE_NAME: rag-langchain-app
@@ -47,9 +47,9 @@ jobs:
 
       # Run your script (uses env above)
       - name: Make script executable
-        run: chmod +x ./push-image.sh
+        run: chmod +x ./push-rag-image.sh
       - name: Build & push via script
-        run: ./push-image.sh
+        run: ./push-rag-image.sh
 
       # Roll ECS service so tasks pull the new tag
       - name: Force new ECS deployment
