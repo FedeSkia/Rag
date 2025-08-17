@@ -1,5 +1,7 @@
 FROM python:3.9
 
+ARG APP_ENV
+ENV APP_ENV=$APP_ENV
 
 # Set the working directory inside the container
 WORKDIR /app
@@ -7,7 +9,7 @@ WORKDIR /app
 COPY docker/rag_app/entrypoint_app.sh .
 RUN chmod +x entrypoint_app.sh
 COPY requirements.txt .
-COPY .env.local.docker .
+COPY .$APP_ENV .
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 # Copy the application source code
