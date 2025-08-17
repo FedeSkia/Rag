@@ -5,7 +5,7 @@ AWS_ACCOUNT_ID="${AWS_ACCOUNT_ID:-507881105499}"
 IMAGE_NAME="${IMAGE_NAME:-rag-langchain-ollama}"
 ECR_REPOSITORY="${ECR_REPOSITORY:-rag-app}"
 SERVICE_TAG="${SERVICE_TAG:-rag-langchain-ollama-latest}"
-CLUSTER_NAME = "${CLUSTER_NAME:-my-rag-app-cluster}"
+CLUSTER_NAME="${CLUSTER_NAME:-my-rag-app-cluster}"
 echo "Building image"
 docker build -f ./docker/ollama/Dockerfile \
   --platform linux/amd64 \
