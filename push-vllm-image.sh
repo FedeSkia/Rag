@@ -13,6 +13,13 @@ docker build -f ./docker/VLLM/Dockerfile --platform linux/amd64 -t $IMAGE_NAME .
 echo -e "🔐 Logging into ECR..."
 aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
 
+# --- Delete ONLY the image with the given tag in ECR (if present) ---
+echo -e "🧹 Deleting existing ECR image with tag: $SERVICE_TAG (if any)..."
+aws ecr batch-delete-image \
+  --repository-name "$ECR_REPOSITORY" \
+  --image-ids imageTag="$SERVICE_TAG" \
+  --region "$AWS_REGION" >/dev/null 2>&1 || true
+
 # 3. Tag image for ECR
 echo -e "🏷️ Tagging image with service-specific tag..."
 docker tag $IMAGE_NAME:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$SERVICE_TAG

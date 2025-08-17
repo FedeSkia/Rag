@@ -15,6 +15,14 @@ docker build -f ./docker/rag_app/Dockerfile --build-arg APP_ENV=.env.prod.docker
 echo -e "🔐 Logging into ECR..."
 aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
 
+# --- Delete ONLY the image with the given tag in ECR (if present) ---
+echo -e "🧹 Deleting existing ECR image with tag: $SERVICE_TAG (if any)..."
+aws ecr batch-delete-image \
+  --repository-name "$ECR_REPOSITORY" \
+  --image-ids imageTag="$SERVICE_TAG" \
+  --region "$AWS_REGION" >/dev/null 2>&1 || true
+
+
 echo -e "📂 Using existing ECR repository: $ECR_REPOSITORY"
 
 # 3. Tag image for ECR
