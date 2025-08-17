@@ -1,50 +1,34 @@
 #!/bin/bash
+set -euo pipefail
 
 echo "Starting Ollama..."
 
-# Start Ollama in background
+# If /root/.ollama is empty (e.g., fresh EFS or Docker volume), seed it from the baked copy
+if [ -d "/root/.ollama" ] && [ -z "$(ls -A /root/.ollama)" ]; then
+  if [ -d "/opt/ollama-models" ] && [ -n "$(ls -A /opt/ollama-models)" ]; then
+    echo "Seeding empty /root/.ollama from /opt/ollama-models..."
+    cp -a /opt/ollama-models/. /root/.ollama/
+  else
+    echo "Warning: /opt/ollama-models is empty or missing; nothing to seed."
+  fi
+fi
+
+# Start server
 ollama serve &
 OLLAMA_PID=$!
 
-# Wait for ollama to start up
-echo "Wait Ollama to be ready..."
-sleep 15
-
-# Check Ollama is ready
-until curl -s http://localhost:11434/api/tags > /dev/null 2>&1; do
-    echo "   Ollama not ready yet, waiting..."
-    sleep 3
+# Wait for readiness
+echo "Waiting for Ollama to be ready..."
+for i in $(seq 1 60); do
+  if curl -fsS http://127.0.0.1:11434/api/tags >/dev/null; then
+    echo "Ollama ready."
+    break
+  fi
+  echo "  ...not ready yet"
+  sleep 1
 done
 
-echo "Ollama ready"
+echo "Installed models:"
+ollama list || true
 
-# download models if not already presents
-echo "Checking models..."
-
-EXISTING_MODELS=$(curl -s http://localhost:11434/api/tags | grep -o '"name":"[^"]*"' | cut -d':' -f2 | tr -d '"')
-
-# models to download
-MODELS=(
-    "qwen3:0.6b"
-)
-
-for model in "${MODELS[@]}"; do
-    if echo "$EXISTING_MODELS" | grep -q "$model"; then
-        echo "$model already installed"
-    else
-        echo "Pull $model..."
-        ollama pull "$model"
-        if [ $? -eq 0 ]; then
-            echo "$model downloaded"
-        else
-            echo "error downloading $model"
-        fi
-    fi
-done
-
-echo "Entrypoint completed"
-echo "models installed:"
-ollama list
-
-echo "Ollama is ready"
 wait $OLLAMA_PID
