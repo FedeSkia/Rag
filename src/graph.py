@@ -1,14 +1,15 @@
 from typing import TypedDict, List, Annotated
 
-from langchain.chat_models import init_chat_model
 from langchain_core.messages import SystemMessage, BaseMessage
+from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
-from langchain_ollama import ChatOllama
 from langgraph.graph import END, StateGraph, add_messages
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
-import config
+
 from db import create_vector_store
+from src.db_memory import create_postgres_checkpointer
+from src.llm_singleton import get_llm
 
 
 # Define state for application
@@ -31,10 +32,7 @@ def retrieve(query: str):
 # Step 1: Generate an AIMessage that may include a tool-call to be sent.
 def query_or_respond(state: State):
     """Generate tool call for retrieval or respond."""
-    chat_model = ChatOllama(
-        model=config.CHAT_MODEL,
-        base_url=config.LLM_HOST
-    )
+    chat_model = get_llm()
     llm_with_tools = chat_model.bind_tools([retrieve])
     response = llm_with_tools.invoke(state["messages"])
     # MessagesState appends messages to state instead of overwriting
@@ -73,7 +71,7 @@ def generate(state: State):
     prompt = [SystemMessage(system_message_content)] + conversation_messages
 
     # Run
-    chat_model = init_chat_model(base_url=config.LLM_HOST, model=config.CHAT_MODEL, reasoning=True, num_predict=1000, temperature=0.0)
+    chat_model = get_llm()
     response = chat_model.invoke(prompt)
     return {"messages": [response]}
 
@@ -94,13 +92,16 @@ def create_graph() -> CompiledStateGraph:
     graph_builder.add_edge("tools", "generate")
     graph_builder.add_edge("generate", END)
 
-    return graph_builder.compile()
+    return graph_builder.compile(checkpointer=create_postgres_checkpointer())
 
 
-async def launch_graph(graph, input_message) -> str:
+async def launch_graph(graph, input_message, config: RunnableConfig) -> str:
     for message_chunk, metadata in graph.stream(
             {"messages": input_message},
             stream_mode="messages",
+            config=config
     ):
         if message_chunk.content:
             yield message_chunk.content
+
+graph = create_graph()
