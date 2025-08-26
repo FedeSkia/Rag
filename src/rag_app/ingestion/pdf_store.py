@@ -14,13 +14,7 @@ from langchain_postgres import PGVector
 
 from rag_app.config import CONFIG, get_postgres_connection_string
 from rag_app.ingestion.coalesce import coalesce_elements, CoalesceConfig
-
-
-USER_ID_KEY: Final[str] = "user_id"
-DOC_ID_KEY: Final[str] = "document_id"
-FILE_NAME_KEY: Final[str] = "file_name"
-PAGE_KEY: Final[str] = "page"
-INGESTED_AT_KEY: Final[str] = "ingested_at"
+from rag_app.ingestion.constants import USER_ID_KEY, DOC_ID_KEY, FILE_NAME_KEY, PAGE_KEY, INGESTED_AT_KEY
 
 
 def generate_doc_id_from_bytesio(f: IO[bytes]) -> str:

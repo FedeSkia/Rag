@@ -72,7 +72,6 @@ async def upload_document(
             file_name=file.filename)
         result = pdf_saver.upsert(inp)
     except Exception as e:
-        # return a clean API error; log e for diagnostics
         raise HTTPException(status_code=500, detail=f"Ingestion failed: {type(e).__name__}. " + str(e))
 
     return {"filename": file.filename, "status": "uploaded", "ingested": result}

@@ -5,6 +5,7 @@ from langchain_postgres import PGVector
 
 from langchain_ollama import OllamaEmbeddings
 from rag_app.config import CONFIG, get_postgres_connection_string
+from rag_app.ingestion.constants import USER_ID_KEY, DOC_ID_KEY
 
 
 @dataclass(frozen=True)
@@ -29,21 +30,21 @@ class PdfRetriever:
             connection=self._pg_connection,
         )
 
-    def _filter(self, *, user_id: str, doc_id: Optional[str] = None,
-                extra: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-        f: Dict[str, Any] = {"user_id": user_id}
-        if doc_id:
-            f["doc_id"] = doc_id
+    def _build_filter_query(self, *, user_id: str, document_id: Optional[str] = None,
+                            extra: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        f: Dict[str, Any] = {USER_ID_KEY: user_id}
+        if document_id:
+            f[DOC_ID_KEY] = document_id
         if extra:
             f.update(extra)
         return f
 
     def similarity(self, inp: RetrieverInput):
         vs = self._vs()
-        filt = self._filter(user_id=inp.user_id, doc_id=inp.doc_id)
+        filt = self._build_filter_query(user_id=inp.user_id, document_id=inp.doc_id)
         return vs.similarity_search(inp.query, k=inp.k, filter=filt)
 
-    def retriever(self, *, user_id: str, k: int = 8, doc_id: Optional[str] = None):
+    def retriever(self, *, user_id: str, k: int = 8, document_id: Optional[str] = None):
         vs = self._vs()
-        filt = self._filter(user_id=user_id, doc_id=doc_id)
+        filt = self._build_filter_query(user_id=user_id, document_id=document_id)
         return vs.as_retriever(search_kwargs={"k": k, "filter": filt})
