@@ -8,14 +8,14 @@ from fastapi.responses import StreamingResponse
 from langchain_core.runnables import RunnableConfig
 from pydantic import BaseModel
 
-from rag_app.config import ALLOW_ORIGINS
+from rag_app.config import CONFIG
 from rag_app.graph import launch_graph, graph
 
 app = FastAPI()
 # initilizing our application
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[ALLOW_ORIGINS],  # Your frontend URL
+    allow_origins=[CONFIG.ALLOW_ORIGINS],  # Your frontend URL
     allow_credentials=True,
     allow_methods=["*"],  # Allows all methods
     allow_headers=["*"],  # Allows all headers

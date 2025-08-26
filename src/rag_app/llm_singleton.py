@@ -1,10 +1,10 @@
 from langchain_ollama import ChatOllama
 
-from rag_app import config
+from rag_app.config import CONFIG
 
 
 def get_llm():
     return ChatOllama(
-        model=config.CHAT_MODEL,
-        base_url=config.LLM_HOST
+        model=CONFIG.CHAT_MODEL,
+        base_url=CONFIG.LLM_HOST
     )
