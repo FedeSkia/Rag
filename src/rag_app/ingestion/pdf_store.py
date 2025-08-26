@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import List, Literal, Dict, Any, IO
+from typing import List, Literal, Dict, Any, IO, Final
 
 from fastapi import UploadFile
 from langchain.schema import Document
@@ -16,6 +16,13 @@ from rag_app.config import CONFIG, get_postgres_connection_string
 from rag_app.ingestion.coalesce import coalesce_elements, CoalesceConfig
 
 
+USER_ID_KEY: Final[str] = "user_id"
+DOC_ID_KEY: Final[str] = "document_id"
+FILE_NAME_KEY: Final[str] = "file_name"
+PAGE_KEY: Final[str] = "page"
+INGESTED_AT_KEY: Final[str] = "ingested_at"
+
+
 def generate_doc_id_from_bytesio(f: IO[bytes]) -> str:
     pos = f.tell()
     f.seek(0)
@@ -25,6 +32,21 @@ def generate_doc_id_from_bytesio(f: IO[bytes]) -> str:
     f.seek(pos)
     return h.hexdigest()[:16]
 
+
+def create_document_filter(user_id: str, document_id: str) -> Dict[str, Any]:
+    """Filter documents by user id and document id."""
+    return {
+        "$and": [
+            {USER_ID_KEY: {"$eq": user_id}},
+            {DOC_ID_KEY: {"$eq": document_id}},
+        ]
+    }
+
+def create_parser_additional_metadata(file_name: str, page) -> Dict[str, Any]:
+    return {
+        FILE_NAME_KEY: file_name,
+        PAGE_KEY: page,
+    }
 
 @dataclass(frozen=True)
 class StorerConfig:
@@ -81,11 +103,9 @@ class PdfSaver:
         except Exception as e:
             print("Error while loading PDF")
             raise
+
         for d in docs:
-            d.metadata.update({
-                "file_name": file_name,
-                "page": d.metadata.get("page"),  # keep if provided
-            })
+            d.metadata.update(create_parser_additional_metadata(file_name, d.metadata.get("page")))
         return docs
 
     def _split(self, docs: List[Document]) -> List[Document]:
@@ -110,11 +130,9 @@ class PdfSaver:
         document_id = generate_doc_id_from_bytesio(file_as_io)
 
         documents_already_exists = self._get_pg_vector().similarity_search(
-            "probe", k=1,
-            filter={"$and": [
-                {"user_id": {"$eq": inp.user_id}},
-                {"document_id": {"$eq": document_id}},
-            ]}
+            "probe",
+            k=1,
+            filter=create_document_filter(inp.user_id, document_id)
         )
         if documents_already_exists:
             raise Exception("Document ID already exists")
@@ -126,9 +144,9 @@ class PdfSaver:
         ts = datetime.now().isoformat()
         for c in chunks:
             c.metadata.update({
-                "user_id": inp.user_id,
-                "ingested_at": ts,
-                "document_id": document_id
+                USER_ID_KEY: inp.user_id,
+                INGESTED_AT_KEY: ts,
+                DOC_ID_KEY: document_id,
             })
 
         PGVector.from_documents(
