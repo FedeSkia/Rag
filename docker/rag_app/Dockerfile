@@ -39,11 +39,11 @@ COPY ${APP_ENV} ./
 
 # ---- Install Python deps with Poetry (cache-friendly layer) ----
 # Copy only lock files first to leverage Docker layer cache on deps
+COPY poetry.lock* ./
 COPY pyproject.toml ./
 COPY README.md ./
 COPY src /app/src
 
-RUN poetry config warnings.export false && poetry debug info && cat pyproject.toml
 RUN poetry lock
 RUN poetry install --no-ansi --only main
 
