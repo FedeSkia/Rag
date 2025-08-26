@@ -8,15 +8,14 @@ from fastapi.responses import StreamingResponse
 from langchain_core.runnables import RunnableConfig
 from pydantic import BaseModel
 
-import config
-from graph import graph
-from graph import launch_graph
+from rag_app.config import ALLOW_ORIGINS
+from rag_app.graph import launch_graph, graph
 
 app = FastAPI()
 # initilizing our application
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[config.ALLOW_ORIGINS],  # Your frontend URL
+    allow_origins=[ALLOW_ORIGINS],  # Your frontend URL
     allow_credentials=True,
     allow_methods=["*"],  # Allows all methods
     allow_headers=["*"],  # Allows all headers
@@ -47,5 +46,5 @@ async def invoke(
     )
 
 
-if __name__ == '__main__':
+def main():
     uvicorn.run(app, host="0.0.0.0", port=8000)

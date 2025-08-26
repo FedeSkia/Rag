@@ -25,7 +25,8 @@ EXISTING_MODELS=$(curl -s http://localhost:11434/api/tags | grep -o '"name":"[^"
 
 # models to download
 MODELS=(
-    "qwen3:0.6b"
+    "qwen3:0.6b",
+    "nomic-embed-text"
 )
 
 for model in "${MODELS[@]}"; do

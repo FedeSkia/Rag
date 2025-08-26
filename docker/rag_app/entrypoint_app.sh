@@ -1,5 +1,5 @@
 #!/bin/bash
+set -e
 
 export APP_ENV="$PWD/${APP_ENV}"
-cd /app/src
-python main.py
+exec poetry run app

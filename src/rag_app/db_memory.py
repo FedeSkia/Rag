@@ -1,7 +1,7 @@
 from langgraph.checkpoint.postgres import PostgresSaver
 from psycopg import Connection
 
-import config
+from rag_app import config
 
 
 def create_postgres_checkpointer():

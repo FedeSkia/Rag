@@ -5,7 +5,7 @@ docker compose up
 
 # Dev 
 To work locally launch the docker-compose
-
+poetry run env APP_ENV=.env.local app
 # Test
 
 to verify if the LLM reply use:

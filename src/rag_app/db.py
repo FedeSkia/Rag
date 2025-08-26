@@ -4,7 +4,7 @@ from langchain_ollama import OllamaEmbeddings
 from langchain_postgres import PGVector
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-import config
+from rag_app import config
 
 
 def index_document(vector_store: PGVector):

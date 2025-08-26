@@ -1,6 +1,7 @@
 from langchain_ollama import ChatOllama
 
-from src import config
+from rag_app import config
+
 
 def get_llm():
     return ChatOllama(

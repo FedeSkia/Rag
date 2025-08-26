@@ -1,0 +1,42 @@
+[tool.poetry]
+name = "rag_app"
+version = "0.1.0"
+description = "RAG app with LangChain, pgvector, and robust PDF ingestion"
+readme = "README.md"
+packages = [{ include = "rag_app", from = "src" }]
+authors = ["Federico C. <federico.conoci@gmail.com>"]
+
+[tool.poetry.dependencies]
+psycopg2-binary = "^2.9.9"
+python = "^3.11"
+
+# --- LangChain stack ---
+langchain = "~=0.3.27"
+langchain-community = "*"
+langchain-core = "*"
+langchain-text-splitters = "*"
+langchain-postgres = "*"
+langchain-ollama = "*"
+langgraph = "*"
+langgraph-checkpoint-postgres = "*"
+
+# --- Web / API ---
+fastapi = "~=0.116.1"
+uvicorn = "~=0.35.0"
+pydantic = "~=2.11.7"
+python-dotenv = "~=1.1.1"
+beautifulsoup4 = "~=4.13.4"
+
+# --- PDF / OCR / Layout ---
+unstructured = { version = "*", extras = ["local-inference", "pii"] }
+pillow = "*"
+pytesseract = "*"
+camelot-py = { version = "*", extras = ["cv"] }
+
+[tool.poetry.group.dev.dependencies]
+pytest = "*"
+ruff = "*"
+
+[tool.poetry.scripts]
+# optional: convenience runner
+app = "rag_app.main:main"
