@@ -1,15 +1,17 @@
 from __future__ import annotations
-from dataclasses import dataclass, field
-from typing import Optional, List, Literal, Dict, Any
-from datetime import datetime
-import pathlib
-import hashlib
 
-from langchain_community.document_loaders import UnstructuredPDFLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+import hashlib
+import pathlib
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Optional, List, Literal, Dict, Any, IO
+
+from fastapi import UploadFile
 from langchain.schema import Document
-from langchain_postgres import PGVector
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_community.document_loaders import UnstructuredFileIOLoader
 from langchain_ollama import OllamaEmbeddings
+from langchain_postgres import PGVector
 
 from rag_app.config import CONFIG
 from rag_app.ingestion.coalesce import coalesce_elements, CoalesceConfig
@@ -46,7 +48,13 @@ class StorerConfig:
 @dataclass(frozen=True)
 class PdfStorerInput:
     user_id: str
-    pdf_path: str
+    file: UploadFile
+    file_name: str
+
+
+def _from_uploadfile_to_io(upload: UploadFile) -> IO[bytes]:
+    upload.file.seek(0)
+    return upload.file  # SpooledTemporaryFile, behaves as IO[bytes]
 
 
 class PdfStore:
@@ -60,23 +68,22 @@ class PdfStore:
         )
 
     # embeddings
-    def _loader_docs(self, pdf_path: str) -> List[Document]:
-        loader = UnstructuredPDFLoader(
-            pdf_path,
+    def _loader_docs(self, file: IO[bytes], file_name: str) -> List[Document]:
+        loader = UnstructuredFileIOLoader(
+            file=file,
             mode=self._config.unstructured_mode,
             strategy=self._config.strategy,
             languages=self._config.languages,
         )
+
         try:
             docs = loader.load()
         except Exception as e:
             print("Error while loading PDF")
             raise
-        file_name = pathlib.Path(pdf_path).name
         for d in docs:
             d.metadata.update({
                 "file_name": file_name,
-                "source": pdf_path,
                 "page": d.metadata.get("page"),  # keep if provided
             })
         return docs
@@ -90,18 +97,17 @@ class PdfStore:
         ))
         return self._splitter.split_documents(coalesced)
 
-    def upsert(self, input: PdfStorerInput) -> Dict[str, Any]:
+    def upsert(self, inp: PdfStorerInput) -> Dict[str, Any]:
         """Parse the PDF and upsert chunks tagged with user_id & doc_id."""
-        doc_id = _doc_id_for(input.pdf_path)
-        docs = self._loader_docs(input.pdf_path)
+        file_as_io = _from_uploadfile_to_io(inp.file)
+        docs = self._loader_docs(file_as_io, inp.file_name)
         chunks = self._split(docs)
 
         # add tenant metadata
         ts = datetime.now().isoformat()
         for c in chunks:
             c.metadata.update({
-                "user_id": input.user_id,
-                "doc_id": doc_id,
+                "user_id": inp.user_id,
                 "ingested_at": ts,
             })
 
@@ -112,4 +118,4 @@ class PdfStore:
             connection=self._config.pg_connection,
             pre_delete_collection=False,
         )
-        return {"doc_id": doc_id, "chunks": len(chunks)}
+        return {"file_name": inp.file_name, "chunks": len(chunks)}

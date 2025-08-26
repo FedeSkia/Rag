@@ -1,4 +1,4 @@
-from typing import TypedDict, List, Annotated
+from typing import TypedDict, List, Annotated, Any, AsyncGenerator
 
 from langchain_core.messages import SystemMessage, BaseMessage
 from langchain_core.runnables import RunnableConfig
@@ -95,7 +95,7 @@ def create_graph() -> CompiledStateGraph:
     return graph_builder.compile(checkpointer=create_postgres_checkpointer())
 
 
-async def launch_graph(graph, input_message, config: RunnableConfig) -> str:
+async def launch_graph(graph, input_message, config: RunnableConfig) -> AsyncGenerator[Any, Any]:
     for message_chunk, metadata in graph.stream(
             {"messages": input_message},
             stream_mode="messages",

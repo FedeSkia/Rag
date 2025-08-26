@@ -2,17 +2,18 @@ from typing import Optional
 from uuid import uuid4
 
 import uvicorn
-from fastapi import FastAPI, Header
+from fastapi import FastAPI, Header, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from langchain_core.runnables import RunnableConfig
 from pydantic import BaseModel
+from starlette import status
 
 from rag_app.config import CONFIG
 from rag_app.graph import launch_graph, graph
+from rag_app.ingestion.pdf_store import PdfStore, PdfStorerInput
 
 app = FastAPI()
-# initilizing our application
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[CONFIG.ALLOW_ORIGINS],  # Your frontend URL
@@ -29,10 +30,11 @@ class InputData(BaseModel):
 @app.post("/api/invoke")
 async def invoke(
         data: InputData,
-        x_thread_id: Optional[str] = Header(default=None),  # client may send it, else create one
+        x_thread_id: Optional[str] = Header(default=None),
+        x_user_id: str = Header(default=None)
 ):
     thread_id = x_thread_id or str(uuid4())  # generate per request if absent
-    cfg: RunnableConfig = {"configurable": {"thread_id": thread_id}}
+    cfg: RunnableConfig = {"configurable": {"thread_id": thread_id, "x_user_id": x_user_id}}
     stream = launch_graph(graph, data.content, config=cfg)
 
     return StreamingResponse(
@@ -41,10 +43,45 @@ async def invoke(
         headers={
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",
-            "X-Thread-Id": thread_id
+            "X-Thread-Id": thread_id,
+            "X-User-Id": str(uuid4()),
         }
     )
 
+@app.post("/api/upload")
+async def upload_document(
+    file: UploadFile = File(...),
+    x_user_id: str = Header(default=None)
+):
+    if not x_user_id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing x-user-id")
+
+    # check MIME type
+    if file.content_type != "application/pdf":
+        raise HTTPException(status_code=400, detail="Only PDF files are allowed")
+    # Optional: small signature check on first bytes (PDFs start with %PDF-)
+    head = await file.read(5)
+    await file.seek(0)
+    if head != b"%PDF-":
+        raise HTTPException(status_code=400, detail="File is not a valid PDF")
+
+    # call your PdfStore for ingestion
+    storer = PdfStore()
+    try:
+        inp = PdfStorerInput(
+            user_id=x_user_id,
+            file=file,
+            file_name=file.filename)
+        result = storer.upsert(inp)
+    except Exception as e:
+        # return a clean API error; log e for diagnostics
+        raise HTTPException(status_code=500, detail=f"Ingestion failed: {type(e).__name__}")
+
+    return {"filename": file.filename, "status": "uploaded", "ingested": result}
 
 def main():
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
+
+if __name__ == "__main__":
+    main()
