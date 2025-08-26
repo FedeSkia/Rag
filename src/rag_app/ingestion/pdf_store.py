@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 import hashlib
-import pathlib
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional, List, Literal, Dict, Any, IO
+from typing import List, Literal, Dict, Any, IO
 
 from fastapi import UploadFile
 from langchain.schema import Document
@@ -13,24 +12,23 @@ from langchain_community.document_loaders import UnstructuredFileIOLoader
 from langchain_ollama import OllamaEmbeddings
 from langchain_postgres import PGVector
 
-from rag_app.config import CONFIG
+from rag_app.config import CONFIG, get_postgres_connection_string
 from rag_app.ingestion.coalesce import coalesce_elements, CoalesceConfig
 
 
-def _doc_id_for(path: str) -> str:
-    # content-addressable is ideal; as a starter use filename+mtime
-    p = pathlib.Path(path)
-    base = f"{p.name}-{p.stat().st_mtime}".encode()
-    return hashlib.sha1(base).hexdigest()[:16]
+def generate_doc_id_from_bytesio(f: IO[bytes]) -> str:
+    pos = f.tell()
+    f.seek(0)
+    h = hashlib.sha1()
+    for chunk in iter(lambda: f.read(1024 * 1024), b""):
+        h.update(chunk)
+    f.seek(pos)
+    return h.hexdigest()[:16]
 
 
 @dataclass(frozen=True)
 class StorerConfig:
-    pg_connection: Optional[str] = field(
-        default_factory=lambda: (
-            f"postgresql://{CONFIG.DB_USER}:{CONFIG.DB_PWD}@{CONFIG.DB_HOST}:{CONFIG.DB_PORT}/postgres?sslmode=disable"
-        )
-    )
+    pg_connection: str = get_postgres_connection_string()
     # OCR / loader
     languages: str = field(default_factory=lambda: CONFIG.OCR_LANGUANGES)
     strategy: Literal["hi_res", "auto"] = field(default_factory=lambda: CONFIG.STRATEGY)
@@ -46,7 +44,7 @@ class StorerConfig:
 
 
 @dataclass(frozen=True)
-class PdfStorerInput:
+class PdfSaverData:
     user_id: str
     file: UploadFile
     file_name: str
@@ -57,7 +55,7 @@ def _from_uploadfile_to_io(upload: UploadFile) -> IO[bytes]:
     return upload.file  # SpooledTemporaryFile, behaves as IO[bytes]
 
 
-class PdfStore:
+class PdfSaver:
 
     def __init__(self):
         self._config: StorerConfig = StorerConfig()
@@ -66,6 +64,8 @@ class PdfStore:
             chunk_overlap=self._config.chunk_overlap,
             separators=list(self._config.separators)
         )
+        self._emb = OllamaEmbeddings(model=CONFIG.EMBEDDING_MODEL)
+        self._collection = CONFIG.DOCUMENTS_COLLECTION
 
     # embeddings
     def _loader_docs(self, file: IO[bytes], file_name: str) -> List[Document]:
@@ -97,9 +97,28 @@ class PdfStore:
         ))
         return self._splitter.split_documents(coalesced)
 
-    def upsert(self, inp: PdfStorerInput) -> Dict[str, Any]:
+    def _get_pg_vector(self) -> PGVector:
+        return PGVector(
+            embeddings=self._config.embedding_model,
+            collection_name=self._collection,
+            connection=self._config.pg_connection,
+        )
+
+    def upsert(self, inp: PdfSaverData) -> Dict[str, Any]:
         """Parse the PDF and upsert chunks tagged with user_id & doc_id."""
         file_as_io = _from_uploadfile_to_io(inp.file)
+        document_id = generate_doc_id_from_bytesio(file_as_io)
+
+        documents_already_exists = self._get_pg_vector().similarity_search(
+            "probe", k=1,
+            filter={"$and": [
+                {"user_id": {"$eq": inp.user_id}},
+                {"document_id": {"$eq": document_id}},
+            ]}
+        )
+        if documents_already_exists:
+            raise Exception("Document ID already exists")
+
         docs = self._loader_docs(file_as_io, inp.file_name)
         chunks = self._split(docs)
 
@@ -109,6 +128,7 @@ class PdfStore:
             c.metadata.update({
                 "user_id": inp.user_id,
                 "ingested_at": ts,
+                "document_id": document_id
             })
 
         PGVector.from_documents(
@@ -119,3 +139,6 @@ class PdfStore:
             pre_delete_collection=False,
         )
         return {"file_name": inp.file_name, "chunks": len(chunks)}
+
+
+pdf_saver = PdfSaver()

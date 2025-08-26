@@ -11,7 +11,7 @@ from starlette import status
 
 from rag_app.config import CONFIG
 from rag_app.graph import launch_graph, graph
-from rag_app.ingestion.pdf_store import PdfStore, PdfStorerInput
+from rag_app.ingestion.pdf_store import PdfSaverData, pdf_saver
 
 app = FastAPI()
 app.add_middleware(
@@ -48,14 +48,14 @@ async def invoke(
         }
     )
 
+
 @app.post("/api/upload")
 async def upload_document(
-    file: UploadFile = File(...),
-    x_user_id: str = Header(default=None)
+        file: UploadFile = File(...),
+        x_user_id: str = Header(default=None)
 ):
     if not x_user_id:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing x-user-id")
-
     # check MIME type
     if file.content_type != "application/pdf":
         raise HTTPException(status_code=400, detail="Only PDF files are allowed")
@@ -65,21 +65,28 @@ async def upload_document(
     if head != b"%PDF-":
         raise HTTPException(status_code=400, detail="File is not a valid PDF")
 
-    # call your PdfStore for ingestion
-    storer = PdfStore()
     try:
-        inp = PdfStorerInput(
+        inp = PdfSaverData(
             user_id=x_user_id,
             file=file,
             file_name=file.filename)
-        result = storer.upsert(inp)
+        result = pdf_saver.upsert(inp)
     except Exception as e:
         # return a clean API error; log e for diagnostics
-        raise HTTPException(status_code=500, detail=f"Ingestion failed: {type(e).__name__}")
+        raise HTTPException(status_code=500, detail=f"Ingestion failed: {type(e).__name__}. " + str(e))
 
     return {"filename": file.filename, "status": "uploaded", "ingested": result}
 
+
 def main():
+    # storer = PdfStore()
+    # storer.upsert(
+    #     PdfStorerInput(user_id="123", pdf_path="/Users/federicoconoci/Downloads/Octo Fissa 12M EE Domestico-106-1.pdf"))
+    # retriever = PdfRetriever()
+    # input = RetrieverInput("123", "Il Cliente può recedere", k=4)
+    # lists = retriever.similarity(input)
+    # for doc in lists:
+    #     print(doc)
     uvicorn.run(app, host="0.0.0.0", port=8000)
 
 
