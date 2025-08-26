@@ -58,6 +58,7 @@ class AppConfig:
     DB_PORT: int = 5432
     DB_USER: Optional[str] = None
     DB_PWD: Optional[str] = None
+    DOCUMENTS_COLLECTION: Optional[str] = None
 
     # ---- API ----
     ALLOW_ORIGINS: Optional[str] = None  # keep as string; parse as CSV if you prefer
@@ -88,6 +89,7 @@ class AppConfig:
             DB_PORT=_int_env("DB_PORT"),
             DB_USER=os.getenv("DB_USER"),
             DB_PWD=os.getenv("DB_PWD"),
+            DOCUMENTS_COLLECTION=os.getenv("DOCUMENTS_COLLECTION"),
             # API
             ALLOW_ORIGINS=os.getenv("ALLOW_ORIGINS"),
             # LLM

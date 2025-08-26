@@ -8,7 +8,7 @@ import hashlib
 from langchain_community.document_loaders import UnstructuredPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.schema import Document
-from langchain_community.vectorstores import PGVector
+from langchain_postgres import PGVector
 from langchain_ollama import OllamaEmbeddings
 
 from rag_app.config import CONFIG
@@ -108,8 +108,8 @@ class PdfStore:
         PGVector.from_documents(
             documents=chunks,
             embedding=self._config.embedding_model,
-            collection_name=input.user_id,
-            connection_string=self._config.pg_connection,
+            collection_name=CONFIG.DOCUMENTS_COLLECTION,
+            connection=self._config.pg_connection,
             pre_delete_collection=False,
         )
         return {"doc_id": doc_id, "chunks": len(chunks)}
