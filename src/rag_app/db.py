@@ -4,7 +4,7 @@ from langchain_ollama import OllamaEmbeddings
 from langchain_postgres import PGVector
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-from rag_app.config import CONFIG
+from rag_app.config import CONFIG, get_postgres_connection_string
 
 
 def index_document(vector_store: PGVector):
@@ -25,12 +25,9 @@ def index_document(vector_store: PGVector):
 
 
 def create_vector_store() -> PGVector:
-    embeddings = OllamaEmbeddings(
-        model=CONFIG.EMBEDDING_MODEL,
-    )
-    DB_CONN = "postgresql://" + CONFIG.DB_HOST + ":" + CONFIG.DB_PWD + "@" + CONFIG.DB_HOST + ":" + CONFIG.DB_PORT + "/postgres?sslmode=disable"
+    embeddings = OllamaEmbeddings(model=CONFIG.EMBEDDING_MODEL)
     return PGVector(
         embeddings=embeddings,
         collection_name="my_docs",
-        connection=DB_CONN,
+        connection=get_postgres_connection_string(),
     )

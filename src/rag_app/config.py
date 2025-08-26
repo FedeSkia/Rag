@@ -44,6 +44,10 @@ def _json_list_env(name: str) -> List[str]:
     return parsed
 
 
+def get_postgres_connection_string() -> str:
+    return f"postgresql://{CONFIG.DB_USER}:{CONFIG.DB_PWD}@{CONFIG.DB_HOST}:{CONFIG.DB_PORT}/postgres?sslmode=disable"
+
+
 @dataclass
 class AppConfig:
     # Which env file was loaded (informational)
