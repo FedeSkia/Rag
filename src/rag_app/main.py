@@ -5,12 +5,12 @@ import uvicorn
 from fastapi import FastAPI, Header, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from langchain_core.runnables import RunnableConfig
 from pydantic import BaseModel
 from starlette import status
 
 from rag_app.config import CONFIG
-from rag_app.graph import launch_graph, graph
+from rag_app.graph import launch_graph
+from rag_app.graph_configuration import GraphRunConfig
 from rag_app.ingestion.pdf_store import PdfSaverData, pdf_saver
 
 app = FastAPI()
@@ -30,12 +30,12 @@ class InputData(BaseModel):
 @app.post("/api/invoke")
 async def invoke(
         data: InputData,
-        x_thread_id: Optional[str] = Header(default=None),
-        x_user_id: str = Header(default=None)
+        x_thread_id: Optional[str] = Header(..., alias="X-Thread-Id"),
+        x_user_id: str = Header(..., alias="X-User-Id")
 ):
     thread_id = x_thread_id or str(uuid4())  # generate per request if absent
-    cfg: RunnableConfig = {"configurable": {"thread_id": thread_id, "x_user_id": x_user_id}}
-    stream = launch_graph(graph, data.content, config=cfg)
+    cfg = GraphRunConfig.from_headers(thread_id=thread_id)
+    stream = launch_graph(data.content, config=cfg)
 
     return StreamingResponse(
         stream,
@@ -52,7 +52,7 @@ async def invoke(
 @app.post("/api/upload")
 async def upload_document(
         file: UploadFile = File(...),
-        x_user_id: str = Header(default=None)
+        x_user_id: str = Header(..., alias="X-User-Id"),
 ):
     if not x_user_id:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing x-user-id")

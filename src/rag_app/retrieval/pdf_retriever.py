@@ -1,6 +1,10 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional, Dict, Any
+
+from langchain_core.documents import Document
+from langchain_core.tools import tool
+from langchain_core.vectorstores import VectorStoreRetriever
 from langchain_postgres import PGVector
 
 from langchain_ollama import OllamaEmbeddings
@@ -23,7 +27,7 @@ class PdfRetriever:
         self._emb = OllamaEmbeddings(model=CONFIG.EMBEDDING_MODEL)
         self._collection = CONFIG.DOCUMENTS_COLLECTION
 
-    def _vs(self) -> PGVector:
+    def _pg_vector(self) -> PGVector:
         return PGVector(
             embeddings=self._emb,
             collection_name=self._collection,
@@ -40,11 +44,14 @@ class PdfRetriever:
         return f
 
     def similarity(self, inp: RetrieverInput):
-        vs = self._vs()
+        vs = self._pg_vector()
         filt = self._build_filter_query(user_id=inp.user_id, document_id=inp.doc_id)
         return vs.similarity_search(inp.query, k=inp.k, filter=filt)
 
-    def retriever(self, *, user_id: str, k: int = 8, document_id: Optional[str] = None):
-        vs = self._vs()
+    def retriever(self, query: str, user_id: str, k: int = 8, document_id: Optional[str] = None) -> list[Document]:
+        pg_vector = self._pg_vector()
         filt = self._build_filter_query(user_id=user_id, document_id=document_id)
-        return vs.as_retriever(search_kwargs={"k": k, "filter": filt})
+        retriever: VectorStoreRetriever = pg_vector.as_retriever(search_kwargs={"k": k, "filter": filt})
+        return retriever.invoke(query)
+
+pdf_retriever = PdfRetriever()

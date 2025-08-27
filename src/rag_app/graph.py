@@ -1,40 +1,45 @@
 from typing import TypedDict, List, Annotated, Any, AsyncGenerator
 
-from langchain_core.messages import SystemMessage, BaseMessage
+from langchain_core.documents import Document
+from langchain_core.messages import SystemMessage, BaseMessage, HumanMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 from langgraph.graph import END, StateGraph, add_messages
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
 
-from rag_app.db import create_vector_store
 from rag_app.db_memory import create_postgres_checkpointer
+from rag_app.graph_configuration import GraphRunConfig
+from rag_app.ingestion.constants import USER_ID_KEY
 from rag_app.llm_singleton import get_llm
+from rag_app.retrieval.pdf_retriever import pdf_retriever
 
 
 # Define state for application
 class State(TypedDict):
     messages: Annotated[List[BaseMessage], add_messages]
+    user_id: str
 
 
-@tool(response_format="content_and_artifact")
-def retrieve(query: str):
-    """Retrieve information related to a query."""
-    vector_store = create_vector_store()
-    retrieved_docs = vector_store.similarity_search(query, k=2)
+@tool("retrieve_documents", response_format="content_and_artifact")
+def retrieve(query: str, user_id: str):
+    """ Retrieves documents from a user's collection. Use this to answer user query """
+    retrieved_documents: list[Document] = pdf_retriever.retriever(query=query, user_id=user_id)
     serialized = "\n\n".join(
         (f"Source: {doc.metadata}\nContent: {doc.page_content}")
-        for doc in retrieved_docs
+        for doc in retrieved_documents
     )
-    return serialized, retrieved_docs
+    return serialized, retrieved_documents
 
 
 # Step 1: Generate an AIMessage that may include a tool-call to be sent.
-def query_or_respond(state: State):
+def query_or_respond(state: State, config: RunnableConfig):
     """Generate tool call for retrieval or respond."""
     chat_model = get_llm()
     llm_with_tools = chat_model.bind_tools([retrieve])
-    response = llm_with_tools.invoke(state["messages"])
+    input = [SystemMessage(content=f"User ID: {state.get(USER_ID_KEY)}")] + state["messages"]
+
+    response = llm_with_tools.invoke(input)
     # MessagesState appends messages to state instead of overwriting
     return {"messages": [response]}
 
@@ -95,13 +100,18 @@ def create_graph() -> CompiledStateGraph:
     return graph_builder.compile(checkpointer=create_postgres_checkpointer())
 
 
-async def launch_graph(graph, input_message, config: RunnableConfig) -> AsyncGenerator[Any, Any]:
+async def launch_graph(input_message: str, config: GraphRunConfig) -> AsyncGenerator[Any, Any]:
+    initial_state: State = {
+        "messages": [HumanMessage(content=input_message)],
+        "user_id": config.user_id,
+    }
     for message_chunk, metadata in graph.stream(
-            {"messages": input_message},
+            input=initial_state,
             stream_mode="messages",
-            config=config
+            config=config.to_runnable(),
     ):
         if message_chunk.content:
             yield message_chunk.content
+
 
 graph = create_graph()
