@@ -50,33 +50,35 @@ def get_postgres_connection_string() -> str:
 
 @dataclass
 class AppConfig:
-    # Which env file was loaded (informational)
-    loaded_env_file: Optional[str] = field(default=None, repr=False)
-
     # ---- DB ----
-    DB_HOST: Optional[str] = None
-    DB_PORT: int = 5432
-    DB_USER: Optional[str] = None
-    DB_PWD: Optional[str] = None
-    DOCUMENTS_COLLECTION: Optional[str] = None
+    DB_HOST: Optional[str]
+    DB_PORT: int
+    DB_USER: Optional[str]
+    DB_PWD: Optional[str]
+    DOCUMENTS_COLLECTION: Optional[str]
 
     # ---- API ----
-    ALLOW_ORIGINS: Optional[str] = None  # keep as string; parse as CSV if you prefer
+    ALLOW_ORIGINS: Optional[str]  # keep as string; parse as CSV if you prefer
 
     # ---- LLM ----
-    CHAT_MODEL: Optional[str] = None
-    EMBEDDING_MODEL: Optional[str] = None
-    LLM_HOST: Optional[str] = None
+    CHAT_MODEL: Optional[str]
+    EMBEDDING_MODEL: Optional[str]
+    LLM_HOST: Optional[str]
 
     # ---- PDF PARSER ----
-    CHUNK_SIZE: int = 1100
-    CHUNK_OVERLAP: int = 200
-    SEPARATORS: List[str] = field(default_factory=lambda: ["\n# ", "\n## ", "\n\n", "\n", " ", ""])
-    OCR_LANGUANGES: List[str] = field(default_factory=lambda: ["ita", "eng"])
-    CAMELOT_FLAVOR: str = "lattice"
-    CAMELOT_PAGES: str = "all"
-    STRATEGY: str = "hi_res"
-    UNSTRUCTURED_MODE: str = "elements"
+    CHUNK_SIZE: int
+    CHUNK_OVERLAP: int
+    SEPARATORS: List[str]
+    OCR_LANGUANGES: List[str]
+    CAMELOT_FLAVOR: str
+    CAMELOT_PAGES: str
+    STRATEGY: str
+    UNSTRUCTURED_MODE: str
+    RERANKER_MODEL_NAME: str
+    RERANKER_TOP_N_RETRIEVED_DOCS: int
+
+    # Which env file was loaded (informational)
+    loaded_env_file: Optional[str] = field(default=None, repr=False)
 
     @classmethod
     def from_env(cls) -> "AppConfig":
@@ -105,6 +107,8 @@ class AppConfig:
             CAMELOT_PAGES=os.getenv("CAMELOT_PAGES"),
             STRATEGY=os.getenv("STRATEGY"),
             UNSTRUCTURED_MODE=os.getenv("UNSTRUCTURED_MODE"),
+            RERANKER_MODEL_NAME=os.getenv("RERANKER_MODEL_NAME"),
+            RERANKER_TOP_N_RETRIEVED_DOCS=int(os.getenv("RERANKER_TOP_N_RETRIEVED_DOCS")),
         )
 
     # Helpers

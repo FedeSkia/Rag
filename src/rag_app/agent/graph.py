@@ -2,6 +2,7 @@ from typing import TypedDict, List, Annotated, Any, AsyncGenerator
 
 from langchain_core.documents import Document
 from langchain_core.messages import SystemMessage, BaseMessage, HumanMessage
+from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 from langgraph.graph import END, StateGraph, add_messages
 from langgraph.graph.state import CompiledStateGraph
@@ -21,9 +22,10 @@ class State(TypedDict):
 
 
 @tool("retrieve_documents", response_format="content_and_artifact")
-def retrieve(query: str, user_id: str):
+def retrieve(query: str, config: RunnableConfig):
     """ Retrieves documents from a user's collection. Use this to answer user query """
-    retrieved_documents: list[Document] = pdf_retriever.retriever(query=query, user_id=user_id)
+    config = GraphRunConfig.from_runnable(config)
+    retrieved_documents: list[Document] = pdf_retriever.retriever(query=query, user_id=config.user_id)
     serialized = "\n\n".join(
         f"Source: {doc.metadata}\nContent: {doc.page_content}"
         for doc in retrieved_documents
