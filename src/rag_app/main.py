@@ -78,14 +78,6 @@ async def upload_document(
 
 
 def main():
-    # storer = PdfStore()
-    # storer.upsert(
-    #     PdfStorerInput(user_id="123", pdf_path="/Users/federicoconoci/Downloads/Octo Fissa 12M EE Domestico-106-1.pdf"))
-    # retriever = PdfRetriever()
-    # input = RetrieverInput("123", "Il Cliente può recedere", k=4)
-    # lists = retriever.similarity(input)
-    # for doc in lists:
-    #     print(doc)
     uvicorn.run(app, host="0.0.0.0", port=8000)
 
 

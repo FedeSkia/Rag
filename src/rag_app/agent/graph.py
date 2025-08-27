@@ -18,7 +18,6 @@ from rag_app.retrieval.pdf_retriever import pdf_retriever
 # Define state for application
 class State(TypedDict):
     messages: Annotated[List[BaseMessage], add_messages]
-    user_id: str
 
 
 @tool("retrieve_documents", response_format="content_and_artifact")
@@ -103,8 +102,7 @@ def create_graph() -> CompiledStateGraph:
 
 async def launch_graph(input_message: str, config: GraphRunConfig) -> AsyncGenerator[Any, Any]:
     initial_state: State = {
-        "messages": [HumanMessage(content=input_message)],
-        "user_id": config.user_id,
+        "messages": [HumanMessage(content=input_message)]
     }
     #Debug history.
     #state_snapshot = graph.get_state(config=config.to_runnable())
