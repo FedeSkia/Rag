@@ -11,8 +11,8 @@ poetry run env APP_ENV=.env.local app
 to verify if the LLM reply use:
 curl -N -i -X POST http://localhost:8000/api/invoke \
   -H "Content-Type: application/json" \
-  -H "X-Thread-Id: 123" \
-  -H "X-User-Id: 123" \
+  -H "X-Thread-Id: 01" \
+  -H "X-User-Id: 0" \
   -d '{"content": "my name is federico. search for the word Cliente in my documents"}'
 
 

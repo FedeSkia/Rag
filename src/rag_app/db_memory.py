@@ -13,3 +13,4 @@ def create_postgres_checkpointer():
     checkpointer = PostgresSaver(conn)
     checkpointer.setup()
     return checkpointer
+

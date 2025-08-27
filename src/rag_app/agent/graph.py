@@ -2,14 +2,13 @@ from typing import TypedDict, List, Annotated, Any, AsyncGenerator
 
 from langchain_core.documents import Document
 from langchain_core.messages import SystemMessage, BaseMessage, HumanMessage
-from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 from langgraph.graph import END, StateGraph, add_messages
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
 
 from rag_app.db_memory import create_postgres_checkpointer
-from rag_app.graph_configuration import GraphRunConfig
+from rag_app.agent.graph_configuration import GraphRunConfig
 from rag_app.ingestion.constants import USER_ID_KEY
 from rag_app.llm_singleton import get_llm
 from rag_app.retrieval.pdf_retriever import pdf_retriever
@@ -100,10 +99,10 @@ def create_graph() -> CompiledStateGraph:
     return graph_builder.compile(checkpointer=create_postgres_checkpointer())
 
 
-async def launch_graph(input_message: str, user_id: str, config: GraphRunConfig) -> AsyncGenerator[Any, Any]:
+async def launch_graph(input_message: str, config: GraphRunConfig) -> AsyncGenerator[Any, Any]:
     initial_state: State = {
         "messages": [HumanMessage(content=input_message)],
-        "user_id": user_id,
+        "user_id": config.user_id,
     }
     #Debug history.
     #state_snapshot = graph.get_state(config=config.to_runnable())

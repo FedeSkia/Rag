@@ -9,8 +9,8 @@ from pydantic import BaseModel
 from starlette import status
 
 from rag_app.config import CONFIG
-from rag_app.graph import launch_graph
-from rag_app.graph_configuration import GraphRunConfig
+from rag_app.agent.graph import launch_graph
+from rag_app.agent.graph_configuration import GraphRunConfig
 from rag_app.ingestion.pdf_store import PdfSaverData, pdf_saver
 
 app = FastAPI()
@@ -34,8 +34,8 @@ async def invoke(
         x_user_id: str = Header(..., alias="X-User-Id")
 ):
     thread_id = x_thread_id or str(uuid4())  # generate per request if absent
-    cfg = GraphRunConfig.from_headers(thread_id=thread_id)
-    stream = launch_graph(input_message=data.content, user_id=x_user_id,  config=cfg)
+    cfg = GraphRunConfig.from_headers(thread_id=thread_id, user_id=x_user_id)
+    stream = launch_graph(input_message=data.content, config=cfg)
 
     return StreamingResponse(
         stream,
