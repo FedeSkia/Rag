@@ -100,10 +100,10 @@ def create_graph() -> CompiledStateGraph:
     return graph_builder.compile(checkpointer=create_postgres_checkpointer())
 
 
-async def launch_graph(input_message: str, config: GraphRunConfig) -> AsyncGenerator[Any, Any]:
+async def launch_graph(input_message: str, user_id: str, config: GraphRunConfig) -> AsyncGenerator[Any, Any]:
     initial_state: State = {
         "messages": [HumanMessage(content=input_message)],
-        "user_id": config.user_id,
+        "user_id": user_id,
     }
     for message_chunk, metadata in graph.stream(
             input=initial_state,

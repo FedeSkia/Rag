@@ -5,8 +5,6 @@ from typing import TypedDict
 from langchain_core.runnables import RunnableConfig
 from pydantic import BaseModel, Field
 
-from rag_app.ingestion.constants import USER_ID_KEY
-
 THREAD_ID = "thread_id"
 
 class Configurable(TypedDict):
@@ -25,7 +23,6 @@ class GraphRunConfig(BaseModel):
         cfg: RunnableConfig = {
             "configurable": {
                 THREAD_ID: self.thread_id,
-                USER_ID_KEY: self.user_id,
             }
         }
         return cfg

@@ -35,7 +35,7 @@ async def invoke(
 ):
     thread_id = x_thread_id or str(uuid4())  # generate per request if absent
     cfg = GraphRunConfig.from_headers(thread_id=thread_id)
-    stream = launch_graph(data.content, config=cfg)
+    stream = launch_graph(input_message=data.content, user_id=x_user_id,  config=cfg)
 
     return StreamingResponse(
         stream,
