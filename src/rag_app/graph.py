@@ -26,14 +26,14 @@ def retrieve(query: str, user_id: str):
     """ Retrieves documents from a user's collection. Use this to answer user query """
     retrieved_documents: list[Document] = pdf_retriever.retriever(query=query, user_id=user_id)
     serialized = "\n\n".join(
-        (f"Source: {doc.metadata}\nContent: {doc.page_content}")
+        f"Source: {doc.metadata}\nContent: {doc.page_content}"
         for doc in retrieved_documents
     )
     return serialized, retrieved_documents
 
 
 # Step 1: Generate an AIMessage that may include a tool-call to be sent.
-def query_or_respond(state: State, config: RunnableConfig):
+def query_or_respond(state: State):
     """Generate tool call for retrieval or respond."""
     chat_model = get_llm()
     llm_with_tools = chat_model.bind_tools([retrieve])
@@ -105,6 +105,9 @@ async def launch_graph(input_message: str, user_id: str, config: GraphRunConfig)
         "messages": [HumanMessage(content=input_message)],
         "user_id": user_id,
     }
+    #Debug history.
+    #state_snapshot = graph.get_state(config=config.to_runnable())
+    #print("Recovered messages:", len(state_snapshot.values.get("messages", [])))
     for message_chunk, metadata in graph.stream(
             input=initial_state,
             stream_mode="messages",
