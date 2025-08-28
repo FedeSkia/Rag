@@ -1,3 +1,8 @@
+#
+Simple RAG Application.
+Exposes 2 endpoints.
+One to upload documents and another one to search in the documents.
+
 # How to build
 cd docker/rag_app
 docker compose build --no-cache
