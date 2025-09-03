@@ -42,7 +42,7 @@ services:
 
   postgres:
     container_name: postgres-rag-app
-    image: ec69f00c656adaffba1c7a493414c775c92770b0e8415d869cf8537dffb93c44
+    image: pgvector/pgvector:0.8.0-pg17-trixie
     restart: always
     environment:
       POSTGRES_PASSWORD: langgraph
