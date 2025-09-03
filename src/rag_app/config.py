@@ -77,6 +77,10 @@ class AppConfig:
     RERANKER_MODEL_NAME: str
     RERANKER_TOP_N_RETRIEVED_DOCS: int
 
+    # ---- AUTH
+    JWT_SECRET: str
+    JWT_ALG: str
+
     # Which env file was loaded (informational)
     loaded_env_file: Optional[str] = field(default=None, repr=False)
 
@@ -109,6 +113,8 @@ class AppConfig:
             UNSTRUCTURED_MODE=os.getenv("UNSTRUCTURED_MODE"),
             RERANKER_MODEL_NAME=os.getenv("RERANKER_MODEL_NAME"),
             RERANKER_TOP_N_RETRIEVED_DOCS=int(os.getenv("RERANKER_TOP_N_RETRIEVED_DOCS")),
+            JWT_SECRET=os.getenv("JWT_SECRET"),
+            JWT_ALG=os.getenv("JWT_ALG"),
         )
 
     # Helpers

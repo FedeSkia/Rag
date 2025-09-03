@@ -2,7 +2,7 @@ from typing import Optional
 from uuid import uuid4
 
 import uvicorn
-from fastapi import FastAPI, Header, UploadFile, File, HTTPException
+from fastapi import FastAPI, Header, UploadFile, File, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
@@ -12,6 +12,7 @@ from rag_app.config import CONFIG
 from rag_app.agent.graph import launch_graph
 from rag_app.agent.graph_configuration import GraphRunConfig
 from rag_app.ingestion.pdf_store import PdfSaverData, pdf_saver
+from rag_app.jwt import JWTBearer, get_user_id
 
 app = FastAPI()
 app.add_middleware(
@@ -30,11 +31,13 @@ class InputData(BaseModel):
 @app.post("/api/invoke")
 async def invoke(
         data: InputData,
+        request: Request,
         x_thread_id: Optional[str] = Header(..., alias="X-Thread-Id"),
-        x_user_id: str = Header(..., alias="X-User-Id")
+        _token: str = Depends(JWTBearer()),
 ):
+    user_id = get_user_id(request)
     thread_id = x_thread_id or str(uuid4())  # generate per request if absent
-    cfg = GraphRunConfig.from_headers(thread_id=thread_id, user_id=x_user_id)
+    cfg = GraphRunConfig.from_headers(thread_id=thread_id, user_id=user_id)
     stream = launch_graph(input_message=data.content, config=cfg)
 
     return StreamingResponse(
@@ -53,6 +56,7 @@ async def invoke(
 async def upload_document(
         file: UploadFile = File(...),
         x_user_id: str = Header(..., alias="X-User-Id"),
+        _token: str = Depends(JWTBearer()),
 ):
     if not x_user_id:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing x-user-id")
