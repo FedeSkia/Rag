@@ -59,12 +59,10 @@ async def invoke(
 
 @app.post("/api/upload")
 async def upload_document(
+        request: Request,
         file: UploadFile = File(...),
-        x_user_id: str = Header(..., alias="X-User-Id"),
         _token: str = Depends(JWTBearer()),
 ):
-    if not x_user_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing x-user-id")
     # check MIME type
     if file.content_type != "application/pdf":
         raise HTTPException(status_code=400, detail="Only PDF files are allowed")
@@ -76,7 +74,7 @@ async def upload_document(
 
     try:
         inp = PdfSaverData(
-            user_id=x_user_id,
+            user_id=get_user_id(request),
             file=file,
             file_name=file.filename)
         result = pdf_saver.upsert(inp)

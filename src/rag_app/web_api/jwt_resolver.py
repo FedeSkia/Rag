@@ -14,7 +14,7 @@ class JWTBearer(HTTPBearer):
     async def __call__(self, request: Request) -> str:
         creds: HTTPAuthorizationCredentials = await super().__call__(request)
         if not creds or not creds.scheme.lower() == "bearer":
-            logger.debug("No bearer token in request headers: %s", dict(request.headers))
+            logger.exception("No bearer token in request headers: %s", dict(request.headers))
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing bearer token")
         try:
             claims = jwt.decode(
