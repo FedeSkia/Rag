@@ -84,6 +84,7 @@ class AppConfig:
     # ---- AUTH
     JWT_SECRET: str
     JWT_ALG: str
+    GOTRUE_URL: str
 
     # Which env file was loaded (informational)
     loaded_env_file: Optional[str] = field(default=None, repr=False)
@@ -121,7 +122,8 @@ class AppConfig:
             RERANKER_MODEL_NAME=os.getenv("RERANKER_MODEL_NAME"),
             RERANKER_TOP_N_RETRIEVED_DOCS=int(os.getenv("RERANKER_TOP_N_RETRIEVED_DOCS")),
             JWT_SECRET=os.getenv("JWT_SECRET"),
-            JWT_ALG=os.getenv("JWT_ALG")
+            JWT_ALG=os.getenv("JWT_ALG"),
+            GOTRUE_URL=os.getenv("GOTRUE_URL"),
         )
 
     # Helpers
