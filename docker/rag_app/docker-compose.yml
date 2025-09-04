@@ -5,6 +5,8 @@ services:
     build:
       context: ../..
       dockerfile: ./docker/rag_app/Dockerfile
+      args:
+        APP_ENV: .env.local.docker
     ports:
       - "8000:8000"
     networks:

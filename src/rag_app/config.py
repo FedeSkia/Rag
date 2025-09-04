@@ -57,6 +57,10 @@ class AppConfig:
     DB_PWD: Optional[str]
     DOCUMENTS_COLLECTION: Optional[str]
 
+    # ---- Logging ----
+    LEVEL: str
+    UVICORN_LEVEL: str
+
     # ---- API ----
     ALLOW_ORIGINS: Optional[str]  # keep as string; parse as CSV if you prefer
 
@@ -96,6 +100,9 @@ class AppConfig:
             DB_USER=os.getenv("DB_USER"),
             DB_PWD=os.getenv("DB_PWD"),
             DOCUMENTS_COLLECTION=os.getenv("DOCUMENTS_COLLECTION"),
+            # LOGGING
+            LEVEL=os.getenv("LEVEL"),
+            UVICORN_LEVEL=os.getenv("UVICORN_LEVEL"),
             # API
             ALLOW_ORIGINS=os.getenv("ALLOW_ORIGINS"),
             # LLM
@@ -114,7 +121,7 @@ class AppConfig:
             RERANKER_MODEL_NAME=os.getenv("RERANKER_MODEL_NAME"),
             RERANKER_TOP_N_RETRIEVED_DOCS=int(os.getenv("RERANKER_TOP_N_RETRIEVED_DOCS")),
             JWT_SECRET=os.getenv("JWT_SECRET"),
-            JWT_ALG=os.getenv("JWT_ALG"),
+            JWT_ALG=os.getenv("JWT_ALG")
         )
 
     # Helpers

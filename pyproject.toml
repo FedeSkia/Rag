@@ -10,6 +10,9 @@ authors = ["Federico C. <federico.conoci@gmail.com>"]
 psycopg2-binary = "^2.9.9"
 python = "^3.11"
 
+# --- Logging ---
+python-json-logger = "*"
+
 # --- LangChain stack ---
 langchain = "~=0.3.27"
 langchain-community = "*"
@@ -33,6 +36,7 @@ pillow = "*"
 pytesseract = "*"
 camelot-py = { version = "*", extras = ["cv"] }
 sentence-transformers = "*"
+pyjwt = "^2.10.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "*"
