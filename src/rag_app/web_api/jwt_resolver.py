@@ -17,14 +17,12 @@ class JWTBearer(HTTPBearer):
             logger.debug("No bearer token in request headers: %s", dict(request.headers))
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing bearer token")
         try:
-            claims = jwt.decode(creds.credentials, CONFIG.JWT_SECRET, algorithms=[CONFIG.JWT_ALG],
-                                options={"verify_signature": False})
-            # claims = jwt.decode(
-            #     token,
-            #     CONFIG.JWT_SECRET,
-            #     algorithms=[CONFIG.JWT_ALG],
-            #     audience="authenticated",  # or whatever you saw above
-            # )
+            claims = jwt.decode(
+                creds.credentials,
+                CONFIG.JWT_SECRET,
+                algorithms=[CONFIG.JWT_ALG],
+                audience="authenticated",  # or whatever you saw above
+            )
             logger.debug("Decoded claims: %s", claims)
         except jwt.ExpiredSignatureError as e:
             logger.exception("Token expired")
