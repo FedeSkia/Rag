@@ -1,0 +1,339 @@
+{
+	"info": {
+		"_postman_id": "823dba72-0079-49b2-80c6-3fc4dd232bd0",
+		"name": "RAG",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "20780268"
+	},
+	"item": [
+		{
+			"name": "go true - authentication",
+			"item": [
+				{
+					"name": "get user",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{JWT}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:9999/user",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9999",
+							"path": [
+								"user"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create user",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"fede.conoci.work@gmail.com\",\n    \"password\": \"password123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:9999/signup",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9999",
+							"path": [
+								"signup"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "log in",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"fede.conoci.work@gmail.com\",\n    \"password\": \"password123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:9999/token?grant_type=password",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9999",
+							"path": [
+								"token"
+							],
+							"query": [
+								{
+									"key": "grant_type",
+									"value": "password"
+								}
+							]
+						},
+						"description": "Generated from cURL: curl -sS -X POST 'http://localhost:9999/token?grant_type=password' \\\n  -H 'Content-Type: application/json' \\\n  -d '{\"email\":\"fede.conoci.work@gmail.com\",\"password\":\"Secret123!\"}'"
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh token",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"refresh_token\": \"mdhhjsg5n3qd\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:9999/token?grant_type=refresh_token",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9999",
+							"path": [
+								"token"
+							],
+							"query": [
+								{
+									"key": "grant_type",
+									"value": "refresh_token"
+								}
+							]
+						},
+						"description": "Generated from cURL: curl -sS -X POST 'http://localhost:9999/token?grant_type=refresh_token' \\\n  -H 'Content-Type: application/json' \\\n  -d '{\"refresh_token\":\"<REFRESH_TOKEN>\"}'"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "upload",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{JWT}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": [
+								"/Users/federicoconoci/Downloads/Octo Fissa 12M Gas Domestico-26-1.pdf",
+								"/Users/federicoconoci/Downloads/Octo Fissa 12M EE Domestico-106-1.pdf"
+							]
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:8000/api/upload",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"upload"
+					]
+				},
+				"description": "Generated from cURL: curl -X POST \"http://localhost:8000/api/upload\" \\\n  -H \"x-user-id: 123\" \\\n  -H \"Content-Type: multipart/form-data\" \\\n  -F \"file=@/path/to/your/document.pdf\""
+			},
+			"response": []
+		},
+		{
+			"name": "DELETE USER",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/api/admin/delete_user?user_id=806997fd-bd00-46a6-8e1e-f496833e23eb",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"admin",
+						"delete_user"
+					],
+					"query": [
+						{
+							"key": "user_id",
+							"value": "806997fd-bd00-46a6-8e1e-f496833e23eb"
+						}
+					]
+				},
+				"description": "Generated from cURL: curl -X DELETE \"https://<your-project-ref>.supabase.co/auth/v1/admin/users/<user_id>\" \\\n  -H \"apikey: <SERVICE_ROLE_KEY>\" \\\n  -H \"Authorization: Bearer <SERVICE_ROLE_KEY>\""
+			},
+			"response": []
+		},
+		{
+			"name": "CREATE USER",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyYjljOThkNi1jZDM4LTQxYTAtOWVkNi0wNDc1NDNjMDYwM2UiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzU3MDEwOTMzLCJpYXQiOjE3NTcwMDczMzMsImVtYWlsIjoiZmVkZS5jb25vY2kud29ya0BnbWFpbC5jb20iLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsIjoiZmVkZS5jb25vY2kud29ya0BnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGhvbmVfdmVyaWZpZWQiOmZhbHNlLCJzdWIiOiIyYjljOThkNi1jZDM4LTQxYTAtOWVkNi0wNDc1NDNjMDYwM2UifSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTc1NzAwNzMzM31dLCJzZXNzaW9uX2lkIjoiZDYyOWMyMWYtYzI4Zi00YTk0LThhZDEtZWE2ZjlmOGI3OWQ5IiwiaXNfYW5vbnltb3VzIjpmYWxzZX0._KYA7pF_4YETsX7UjUFO9CBPTK0lpNtVcTFbpO1l_4c"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"email\": \"fede.conoci.work@gmail.com\",\n    \"password\": \"password123\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8000/api/admin/create_user",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"admin",
+						"create_user"
+					]
+				},
+				"description": "Generated from cURL: curl -X DELETE \"https://<your-project-ref>.supabase.co/auth/v1/admin/users/<user_id>\" \\\n  -H \"apikey: <SERVICE_ROLE_KEY>\" \\\n  -H \"Authorization: Bearer <SERVICE_ROLE_KEY>\""
+			},
+			"response": []
+		},
+		{
+			"name": "GET USER THREAD",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{JWT}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4MDY5OTdmZC1iZDAwLTQ2YTYtOGUxZS1mNDk2ODMzZTIzZWIiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzU3MDEyMzY2LCJpYXQiOjE3NTcwMDg3NjYsImVtYWlsIjoiZmVkZS5jb25vY2kud29ya0BnbWFpbC5jb20iLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsIjoiZmVkZS5jb25vY2kud29ya0BnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGhvbmVfdmVyaWZpZWQiOmZhbHNlLCJzdWIiOiI4MDY5OTdmZC1iZDAwLTQ2YTYtOGUxZS1mNDk2ODMzZTIzZWIifSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTc1NzAwODc2Nn1dLCJzZXNzaW9uX2lkIjoiMWVlYzY1NjctM2E0MC00ZDYzLWEzZjktOTAyMzU1OGY0YmFhIiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.IivCfUQOIA1b2zXFjD26iCylwyccIREvSl9MsO4M0LQ"
+					},
+					{
+						"key": "X-Thread-Id",
+						"value": "01"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8000/api/get_user_thread",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"get_user_thread"
+					]
+				},
+				"description": "Generated from cURL: curl --location -X GET 'http://localhost:8000/api/get_user_thread' \\\n-H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4MDY5OTdmZC1iZDAwLTQ2YTYtOGUxZS1mNDk2ODMzZTIzZWIiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzU3MDEyMzY2LCJpYXQiOjE3NTcwMDg3NjYsImVtYWlsIjoiZmVkZS5jb25vY2kud29ya0BnbWFpbC5jb20iLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsIjoiZmVkZS5jb25vY2kud29ya0BnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGhvbmVfdmVyaWZpZWQiOmZhbHNlLCJzdWIiOiI4MDY5OTdmZC1iZDAwLTQ2YTYtOGUxZS1mNDk2ODMzZTIzZWIifSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTc1NzAwODc2Nn1dLCJzZXNzaW9uX2lkIjoiMWVlYzY1NjctM2E0MC00ZDYzLWEzZjktOTAyMzU1OGY0YmFhIiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.IivCfUQOIA1b2zXFjD26iCylwyccIREvSl9MsO4M0LQ' \\\n-H \"X-Thread-Id: 01\""
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "JWT",
+			"value": ""
+		}
+	]
+}
