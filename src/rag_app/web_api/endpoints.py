@@ -92,20 +92,6 @@ async def upload_document(
     return {"filename": file.filename, "status": "uploaded", "ingested": result}
 
 
-@app.get("/api/debug/get_user_thread")
-def get_user_thread(request: Request,
-                    _token: str = Depends(JWTBearer()),
-                    x_thread_id: Optional[str] = Header(..., alias="X-Thread-Id")):
-    user_id = get_user_id(request)
-
-    cfg: RunnableConfig = {"configurable": {
-        "thread_id": x_thread_id,
-        "checkpoint_ns": user_id,
-        "checkpoint_namespace": user_id,  # compat
-    }}
-    return create_graph().get_state(config=cfg)  # .values["messages"] holds the history
-
-
 def _mint_service_jwt() -> str:
     """Create a short-lived service-role JWT for GoTrue admin endpoints."""
     now = int(time.time())
@@ -119,7 +105,7 @@ def _mint_service_jwt() -> str:
     return jwt.encode(payload, CONFIG.JWT_SECRET, algorithm=CONFIG.JWT_ALG)
 
 
-@app.delete("/api/admin/delete_user?user_id={user_id}")
+@app.delete("/api/admin/delete_user")
 async def delete_user_admin(user_id: str):
     """Admin: delete a user in local GoTrue via /admin/users/{id}.
     Requires that CONFIG.JWT_SECRET matches GoTrue's signing secret
