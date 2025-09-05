@@ -1,23 +1,18 @@
-from typing import TypedDict, List, Annotated, Any, AsyncGenerator
+from typing import Any, AsyncGenerator
 
 from langchain_core.documents import Document
-from langchain_core.messages import SystemMessage, BaseMessage, HumanMessage
+from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
-from langgraph.graph import END, StateGraph, add_messages
+from langgraph.graph import END, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
 
-from rag_app.db_memory import create_postgres_checkpointer
+from rag_app.agent.agent_state import State
 from rag_app.agent.graph_configuration import GraphRunConfig
-from rag_app.ingestion.constants import USER_ID_KEY
+from rag_app.db_memory import create_postgres_checkpointer, create_postgres_store, store_user_conversation_history
 from rag_app.llm_singleton import get_llm
 from rag_app.retrieval.pdf_retriever import pdf_retriever
-
-
-# Define state for application
-class State(TypedDict):
-    messages: Annotated[List[BaseMessage], add_messages]
 
 
 @tool("retrieve_documents", response_format="content_and_artifact")
@@ -33,14 +28,13 @@ def retrieve(query: str, config: RunnableConfig):
 
 
 # Step 1: Generate an AIMessage that may include a tool-call to be sent.
-def query_or_respond(state: State):
+def query_or_respond(state: State, config: RunnableConfig):
     """Generate tool call for retrieval or respond."""
     chat_model = get_llm()
     llm_with_tools = chat_model.bind_tools([retrieve])
-    input = [SystemMessage(content=f"User ID: {state.get(USER_ID_KEY)}")] + state["messages"]
 
-    response = llm_with_tools.invoke(input)
-    # MessagesState appends messages to state instead of overwriting
+    response = llm_with_tools.invoke(state["messages"])
+    store_user_conversation_history(config=GraphRunConfig.from_runnable(config))
     return {"messages": [response]}
 
 
@@ -97,16 +91,16 @@ def create_graph() -> CompiledStateGraph:
     graph_builder.add_edge("tools", "generate")
     graph_builder.add_edge("generate", END)
 
-    return graph_builder.compile(checkpointer=create_postgres_checkpointer())
+    return graph_builder.compile(checkpointer=create_postgres_checkpointer(), store=create_postgres_store())
 
 
 async def launch_graph(input_message: str, config: GraphRunConfig) -> AsyncGenerator[Any, Any]:
     initial_state: State = {
         "messages": [HumanMessage(content=input_message)]
     }
-    #Debug history.
-    #state_snapshot = graph.get_state(config=config.to_runnable())
-    #print("Recovered messages:", len(state_snapshot.values.get("messages", [])))
+    # Debug history.
+    # state_snapshot = graph.get_state(config=config.to_runnable())
+    # print("Recovered messages:", len(state_snapshot.values.get("messages", [])))
     for message_chunk, metadata in graph.stream(
             input=initial_state,
             stream_mode="messages",
