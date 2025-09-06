@@ -1,19 +1,18 @@
 import logging
 
-from fastapi import UploadFile, File, HTTPException, Depends, Request, APIRouter
+from fastapi import UploadFile, File, HTTPException, Depends, APIRouter
 
 logger = logging.getLogger(__name__)
 from rag_app.ingestion.pdf_store import PdfSaverData, pdf_saver
-from rag_app.web_api.jwt_resolver import JWTBearer, get_user_id
+from rag_app.web_api.jwt_resolver import JWTBearer
 
 document_router = APIRouter(prefix="/document")
 
 
 @document_router.post("/upload")
 async def upload_document(
-        request: Request,
         file: UploadFile = File(...),
-        _token: str = Depends(JWTBearer()),
+        user_id: str = Depends(JWTBearer()),
 ):
     # check MIME type
     if file.content_type != "application/pdf":
@@ -26,7 +25,7 @@ async def upload_document(
 
     try:
         inp = PdfSaverData(
-            user_id=get_user_id(request),
+            user_id=user_id,
             file=file,
             file_name=file.filename)
         result = pdf_saver.upsert(inp)

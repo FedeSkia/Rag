@@ -1,22 +1,21 @@
 import logging
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 from uuid import uuid4
 
-from fastapi import Header, Request
+from fastapi import Header
 from fastapi.responses import StreamingResponse
-from langgraph.checkpoint.base import CheckpointTuple
 from langgraph.store.base import SearchItem
-from pydantic import BaseModel
+from langgraph.types import StateSnapshot
+from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
-from rag_app.agent.graph import launch_graph
-from rag_app.agent.graph_configuration import GraphRunConfig
-from rag_app.web_api.jwt_resolver import get_user_id
+from rag_app.agent.graph import launch_graph, GRAPH
+from rag_app.agent.graph_configuration import GraphRunConfig, THREAD_ID
 
 from fastapi import Depends, APIRouter
 
-from rag_app.db_memory import STORE, CHECKPOINTER
+from rag_app.db_memory import STORE
 
 logger = logging.getLogger(__name__)
 from rag_app.web_api.jwt_resolver import JWTBearer
@@ -25,40 +24,38 @@ chat_router = APIRouter(prefix="/chat")
 
 
 class ChatHistory(BaseModel):
-    thread_id: str
-    created_at: datetime
-    updated_at: datetime
-
-
-class ChatHistoryWebResponse(BaseModel):
-    chats: list[ChatHistory]
+    thread_id: str = Field(..., min_length=1)
+    created_at: datetime = Field(...)
+    updated_at: datetime = Field(...)
 
 
 @chat_router.get("/get_user_conversation_history")
-async def get_user_conversation_history(
-        request: Request,
-        _token: str = Depends(JWTBearer())):
-    # chats: Item = STORE.get(namespace=("chat_history", get_user_id(request)))
-    chats: list[SearchItem] = STORE.search(("chat_history", get_user_id(request)))
+async def get_user_conversation_history(user_id: str = Depends(JWTBearer())) -> List[ChatHistory]:
+    chats: list[SearchItem] = STORE.search(("chat_history", user_id))
+    if not chats:
+        return []
+    return [
+        ChatHistory(thread_id=chat.value["config"][THREAD_ID], created_at=chat.created_at, updated_at=chat.updated_at)
+        for chat
+        in chats]
 
-    chat_histories = []
-    for chat in chats:
-        config = chat.value["config"]
-        chat_histories.append(
-            ChatHistory(thread_id=config["thread_id"], created_at=chat.created_at, updated_at=chat.updated_at))
 
-    return ChatHistoryWebResponse(chats=chat_histories)
+class ChatHistoryThread(BaseModel):
+    type: str = Field(..., min_length=1)
+    content: str = Field(..., min_length=1)
 
 
 @chat_router.get("/get_user_conversation_thread")
 async def get_user_conversation_history(
-        request: Request,
-        _token: str = Depends(JWTBearer()),
-        x_thread_id: Optional[str] = Header(..., alias="X-Thread-Id"), ):
-    cfg = GraphRunConfig.from_headers(thread_id=x_thread_id, user_id=get_user_id(request))
-    checkpoints: CheckpointTuple = list(CHECKPOINTER.list(config=cfg.to_runnable()))
-
-    return []
+        user_id: str = Depends(JWTBearer()),
+        x_thread_id: Optional[str] = Header(..., alias="X-Thread-Id"), ) -> List[ChatHistoryThread]:
+    """ returns thread chat history for a certain user and thread """
+    cfg = GraphRunConfig.from_headers(thread_id=x_thread_id, user_id=user_id)
+    state: StateSnapshot = GRAPH.get_state(cfg.to_runnable())
+    if state is None or not state.values:
+        return []
+    msgs = state.values.get("messages", [])
+    return [ChatHistoryThread(type=getattr(m, "type", ""), content=getattr(m, "content", "")) for m in msgs]
 
 
 class InputData(BaseModel):
@@ -68,11 +65,9 @@ class InputData(BaseModel):
 @chat_router.post("/invoke")
 async def invoke(
         data: InputData,
-        request: Request,
         x_thread_id: Optional[str] = Header(..., alias="X-Thread-Id"),
-        _token: str = Depends(JWTBearer()),
+        user_id: str = Depends(JWTBearer()),
 ):
-    user_id = get_user_id(request)
     thread_id = x_thread_id or str(uuid4())  # generate per request if absent
     cfg = GraphRunConfig.from_headers(thread_id=thread_id, user_id=user_id)
     stream = launch_graph(input_message=data.content, config=cfg)

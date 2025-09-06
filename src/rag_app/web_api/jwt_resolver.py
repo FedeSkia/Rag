@@ -35,10 +35,10 @@ class JWTBearer(HTTPBearer):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Invalid token: {e}")
         # attach claims to request for downstream handlers
         request.state.claims = claims
-        return creds.credentials
+        return _get_user_id(request)
 
 
-def get_user_id(request: Request) -> str:
+def _get_user_id(request: Request) -> str:
     claims = getattr(request.state, "claims", None)
     user_id = claims.get("sub") if claims else None
     if not user_id:

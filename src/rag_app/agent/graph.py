@@ -101,7 +101,7 @@ async def launch_graph(input_message: str, config: GraphRunConfig) -> AsyncGener
     # Debug history.
     # state_snapshot = graph.get_state(config=config.to_runnable())
     # print("Recovered messages:", len(state_snapshot.values.get("messages", [])))
-    for message_chunk, metadata in graph.stream(
+    for message_chunk, metadata in GRAPH.stream(
             input=initial_state,
             stream_mode="messages",
             config=config.to_runnable(),
@@ -110,4 +110,4 @@ async def launch_graph(input_message: str, config: GraphRunConfig) -> AsyncGener
             yield message_chunk.content
 
 
-graph = create_graph()
+GRAPH = create_graph()
