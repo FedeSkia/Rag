@@ -40,7 +40,7 @@ def setup_logging():
             },
         },
         "filters": {
-            "ctx": {"()": "logging_setup.ContextFilter"},
+            "ctx": {"()": "rag_app.logging_setup.ContextFilter"},
         },
         "handlers": {
             "console": {
