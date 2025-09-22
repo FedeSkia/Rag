@@ -65,7 +65,7 @@ class InputData(BaseModel):
 @chat_router.post("/invoke")
 async def invoke(
         data: InputData,
-        x_thread_id: Optional[str] = Header(..., alias="X-Thread-Id"),
+        x_thread_id: Optional[str] = Header(None, alias="X-Thread-Id"),
         user_id: str = Depends(JWTBearer()),
 ):
     thread_id = x_thread_id or str(uuid4())  # generate per request if absent
@@ -78,7 +78,6 @@ async def invoke(
         headers={
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",
-            "X-Thread-Id": thread_id,
-            "X-User-Id": str(uuid4()),
+            "X-Thread-Id": thread_id
         }
     )
