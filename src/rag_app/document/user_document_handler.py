@@ -15,7 +15,6 @@ class UserDocument(BaseModel):
     user_id: str = Field(...)
     document_id: str = Field(...)
     created_at: datetime | None = None
-    error: str | None = None
 
 def list_user_documents(user_id: str) -> List[UserDocument]:
     """
@@ -43,6 +42,8 @@ def list_user_documents(user_id: str) -> List[UserDocument]:
         try:
             cur.execute(sql, (CONFIG.DOCUMENTS_COLLECTION, user_id))
             rows: list[tuple] = cur.fetchall()
+            if len(rows) == 0:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
             return [
                 UserDocument(user_id=row[0], file_name=row[1], document_id=row[2], created_at=row[3])
                 for row in rows
@@ -72,6 +73,8 @@ def delete_user_document(user_id: str, document_id: str) -> int:
             cur.execute(sql, (CONFIG.DOCUMENTS_COLLECTION, user_id, document_id))
             deleted = cur.rowcount
             conn.commit()
+            if deleted == 0:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
             return deleted
     except Exception as e:
         raise HTTPException(
