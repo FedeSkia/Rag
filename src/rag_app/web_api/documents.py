@@ -1,6 +1,11 @@
 import logging
+from typing import List
 
-from fastapi import UploadFile, File, HTTPException, Depends, APIRouter
+from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import UploadFile, File
+
+from rag_app.config import CONFIG
+from rag_app.document.document_retriever import list_user_documents, UserDocument
 
 logger = logging.getLogger(__name__)
 from rag_app.ingestion.pdf_store import PdfSaverData, pdf_saver
@@ -33,3 +38,9 @@ async def upload_document(
         raise HTTPException(status_code=500, detail=f"Ingestion failed: {type(e).__name__}. " + str(e))
 
     return {"filename": file.filename, "status": "uploaded", "ingested": result}
+
+
+@document_router.get("/mine", dependencies=[Depends(JWTBearer())])
+def list_my_documents(user_id: str = Depends(JWTBearer())) -> List[UserDocument]:
+    return list_user_documents(user_id=user_id)
+
