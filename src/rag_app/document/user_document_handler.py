@@ -53,3 +53,28 @@ def list_user_documents(user_id: str) -> List[UserDocument]:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"DB error: {type(e).__name__}: {e}",
             )
+
+def delete_user_document(user_id: str, document_id: str) -> int:
+    """
+    Delete all chunks of a document for a given user.
+    Returns number of rows deleted.
+    """
+    sql = """
+    DELETE FROM langchain_pg_embedding e
+    USING langchain_pg_collection c
+    WHERE e.collection_id = c.uuid
+      AND c.name = %s
+      AND e.cmetadata->>'user_id' = %s
+      AND e.cmetadata->>'document_id' = %s;
+    """
+    try:
+        with psycopg.connect(get_postgres_connection_string()) as conn, conn.cursor() as cur:
+            cur.execute(sql, (CONFIG.DOCUMENTS_COLLECTION, user_id, document_id))
+            deleted = cur.rowcount
+            conn.commit()
+            return deleted
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"DB error while deleting document {document_id} for user {user_id}: {e}",
+        )
