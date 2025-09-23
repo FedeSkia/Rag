@@ -55,5 +55,5 @@ def delete_document(document_id: str, user_id: str = Depends(JWTBearer())) -> Do
     deleted = delete_user_document(user_id=user_id, document_id=document_id)
     #more than 0 chunks have been deleted
     if deleted > 0:
-        return DocumentDeleted(document_id=document_id, user_id=user_id, status="deleted", file_name=document_id)
+        return DocumentDeleted(document_id=document_id, user_id=user_id, status="deleted")
     raise HTTPException(status_code=404, detail="Document not found")
