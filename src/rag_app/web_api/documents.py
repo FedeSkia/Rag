@@ -15,7 +15,6 @@ from rag_app.web_api.jwt_resolver import JWTBearer
 document_router = APIRouter(prefix="/document")
 
 class DocumentDeleted(BaseModel):
-    file_name: str = Field(...)
     user_id: str = Field(...)
     status: str = Field(...)
     document_id: str = Field(...)
