@@ -46,6 +46,8 @@ def list_user_documents(user_id: str) -> List[UserDocument]:
                 UserDocument(user_id=row[0], file_name=row[1], document_id=row[2], created_at=row[3])
                 for row in rows
             ]
+        except HTTPException as e:
+            raise e
         except Exception as e:
             logging.error(f"DB error: {type(e).__name__}: {e}")
             raise HTTPException(
@@ -75,6 +77,8 @@ def delete_user_document(user_id: str, document_id: str) -> int:
             if deleted == 0:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
             return deleted
+    except HTTPException as e:
+        raise e
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
