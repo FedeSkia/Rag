@@ -4,17 +4,18 @@ from typing import List
 
 import psycopg
 from fastapi import HTTPException
-from psycopg.rows import Row
 from pydantic import BaseModel, Field
 from starlette import status
 
 from rag_app.config import CONFIG, get_postgres_connection_string
+
 
 class UserDocument(BaseModel):
     file_name: str = Field(...)
     user_id: str = Field(...)
     document_id: str = Field(...)
     created_at: datetime | None = None
+
 
 def list_user_documents(user_id: str) -> List[UserDocument]:
     """
@@ -26,10 +27,7 @@ def list_user_documents(user_id: str) -> List[UserDocument]:
       - ingested_at
     """
     sql = """
-          SELECT e.cmetadata ->>'user_id' AS user_id,
-              e.cmetadata->>'file_name' AS file_name,
-              e.cmetadata->>'document_id' AS document_id,
-              MIN (COALESCE ((e.cmetadata->>'ingested_at')::timestamptz, NOW())) AS created_at 
+          SELECT e.cmetadata ->>'user_id' AS user_id, e.cmetadata->>'file_name' AS file_name, e.cmetadata->>'document_id' AS document_id, MIN (COALESCE ((e.cmetadata->>'ingested_at')::timestamptz, NOW())) AS created_at
           FROM langchain_pg_embedding e
               JOIN langchain_pg_collection c
           ON e.collection_id = c.uuid
@@ -55,19 +53,20 @@ def list_user_documents(user_id: str) -> List[UserDocument]:
                 detail=f"DB error: {type(e).__name__}: {e}",
             )
 
+
 def delete_user_document(user_id: str, document_id: str) -> int:
     """
     Delete all chunks of a document for a given user.
     Returns number of rows deleted.
     """
     sql = """
-    DELETE FROM langchain_pg_embedding e
-    USING langchain_pg_collection c
-    WHERE e.collection_id = c.uuid
-      AND c.name = %s
-      AND e.cmetadata->>'user_id' = %s
-      AND e.cmetadata->>'document_id' = %s;
-    """
+          DELETE
+          FROM langchain_pg_embedding e USING langchain_pg_collection c
+          WHERE e.collection_id = c.uuid
+            AND c.name = %s
+            AND e.cmetadata->>'user_id' = %s
+            AND e.cmetadata->>'document_id' = %s; \
+          """
     try:
         with psycopg.connect(get_postgres_connection_string()) as conn, conn.cursor() as cur:
             cur.execute(sql, (CONFIG.DOCUMENTS_COLLECTION, user_id, document_id))
