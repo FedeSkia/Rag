@@ -46,7 +46,7 @@ class ChatHistoryThread(BaseModel):
 
 
 @chat_router.get("/get_user_conversation_thread")
-async def get_user_conversation_history(
+async def get_user_conversation_thread(
         user_id: str = Depends(JWTBearer()),
         x_thread_id: Optional[str] = Header(..., alias="X-Thread-Id"), ) -> List[ChatHistoryThread]:
     """ returns thread chat history for a certain user and thread """
