@@ -15,7 +15,7 @@ from rag_app.agent.graph_configuration import GraphRunConfig, THREAD_ID
 
 from fastapi import Depends, APIRouter
 
-from rag_app.db_memory import STORE
+from rag_app.db_memory import STORE, CHECKPOINTER
 
 logger = logging.getLogger(__name__)
 from rag_app.web_api.jwt_resolver import JWTBearer
@@ -60,6 +60,17 @@ async def get_user_conversation_thread(
 
 class InputData(BaseModel):
     content: str
+
+
+@chat_router.delete("/{thread_id}")
+def delete_thread(thread_id: str, user_id: str = Depends(JWTBearer())):
+    try:
+        CHECKPOINTER.delete_thread(thread_id=thread_id)
+        STORE.delete(namespace=("chat_history", user_id), key=thread_id)
+    except Exception as e:
+        logger.error(e)
+
+    return {"status": "deleted", "thread_id": thread_id}
 
 
 @chat_router.post("/invoke")
