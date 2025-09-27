@@ -27,6 +27,7 @@ class ChatHistory(BaseModel):
     thread_id: str = Field(..., min_length=1)
     created_at: datetime = Field(...)
     updated_at: datetime = Field(...)
+    has_msg: bool = Field(default=True)
 
 
 @chat_router.get("/get_user_conversation_history")
