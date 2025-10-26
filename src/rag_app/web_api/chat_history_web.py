@@ -56,7 +56,13 @@ async def get_user_conversation_thread(
     if state is None or not state.values:
         return []
     msgs = state.values.get("messages", [])
-    return [ChatHistoryThread(type=getattr(m, "type", ""), content=getattr(m, "content", "")) for m in msgs]
+    thread_history: List[ChatHistoryThread] = []
+    for msg in msgs:
+        if msg.type == "tool":
+           continue
+        else:
+            thread_history.append(ChatHistoryThread(type=getattr(msg, "type", ""), content=getattr(msg, "content", "")))
+    return thread_history
 
 
 class InputData(BaseModel):
