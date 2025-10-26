@@ -106,7 +106,8 @@ async def launch_graph(input_message: str, config: GraphRunConfig) -> AsyncGener
             stream_mode="messages",
             config=config.to_runnable(),
     ):
-        if message_chunk.content:
+        type = message_chunk.type
+        if type == "AIMessageChunk" and message_chunk.content:
             yield message_chunk.content
 
 
