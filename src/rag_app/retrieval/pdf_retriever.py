@@ -17,7 +17,14 @@ class RetrieverInput:
     user_id: str
     query: str
     k: int = 8
-    doc_id: Optional[str] = None  # optional scoping to a single document
+    doc_id: Optional[str] = None
+
+
+@dataclass(frozen=True)
+class DocumentFound:
+    page_number: int
+    page_content: str
+    document_name: str
 
 
 class PdfRetriever:
@@ -59,12 +66,14 @@ class PdfRetriever:
         candidates = vs.similarity_search(inp.query, k=k_candidates, filter=filt)
         return self._rerank(inp.query, candidates, top_n=inp.k)
 
-    def retriever(self, query: str, user_id: str, k: int = 20, document_id: Optional[str] = None) -> list[Document]:
+    def retriever(self, query: str, user_id: str, k: int = 20, document_id: Optional[str] = None) -> list[DocumentFound]:
         assert k > CONFIG.RERANKER_TOP_N_RETRIEVED_DOCS
         pg_vector = self._pg_vector()
         filt = self._build_filter_query(user_id=user_id, document_id=document_id)
         retriever: VectorStoreRetriever = pg_vector.as_retriever(search_kwargs={"k": k, "filter": filt})
         docs = retriever.invoke(query)
-        return self._rerank(query, docs, top_n=CONFIG.RERANKER_TOP_N_RETRIEVED_DOCS)
+        documents: list[Document] = self._rerank(query, docs, top_n=CONFIG.RERANKER_TOP_N_RETRIEVED_DOCS)
+        parsed_documents: list[DocumentFound] = [DocumentFound(doc.metadata["page_number"], doc.page_content, doc.metadata["file_name"]) for doc in documents]
+        return parsed_documents
 
 pdf_retriever = PdfRetriever()

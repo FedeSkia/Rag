@@ -1,6 +1,8 @@
+import json
+import logging
+from dataclasses import asdict
 from typing import Any, AsyncGenerator
 
-from langchain_core.documents import Document
 from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
@@ -12,19 +14,17 @@ from rag_app.agent.agent_state import State
 from rag_app.agent.graph_configuration import GraphRunConfig
 from rag_app.db_memory import create_postgres_checkpointer, create_postgres_store, store_user_conversation_history
 from rag_app.llm_singleton import get_llm
-from rag_app.retrieval.pdf_retriever import pdf_retriever
+from rag_app.retrieval.pdf_retriever import pdf_retriever, DocumentFound
+
+logger = logging.getLogger(__name__)
 
 
 @tool("retrieve_documents", response_format="content_and_artifact")
 def retrieve(query: str, config: RunnableConfig):
     """ Retrieves documents from a user's collection. Use this to answer user query """
     config = GraphRunConfig.from_runnable(config)
-    retrieved_documents: list[Document] = pdf_retriever.retriever(query=query, user_id=config.user_id)
-    serialized = "\n\n".join(
-        f"Source: {doc.metadata}\nContent: {doc.page_content}"
-        for doc in retrieved_documents
-    )
-    return serialized, retrieved_documents
+    documents: list[DocumentFound] = pdf_retriever.retriever(query=query, user_id=config.user_id)
+    return documents, documents
 
 
 # Step 1: Generate an AIMessage that may include a tool-call to be sent.
@@ -48,10 +48,10 @@ def generate(state: State):
             recent_tool_messages.append(message)
         else:
             break
-    tool_messages = recent_tool_messages[::-1]
+    tool_message = recent_tool_messages[::-1]
 
     # Format into prompt
-    docs_content = "\n\n".join(doc.content for doc in tool_messages)
+    docs_content = "\n\n".join(doc.page_content for doc in tool_message[0].artifact)
     system_message_content = (
         "You are an assistant for question-answering tasks. "
         "Use the following pieces of retrieved context to answer "
@@ -106,9 +106,13 @@ async def launch_graph(input_message: str, config: GraphRunConfig) -> AsyncGener
             stream_mode="messages",
             config=config.to_runnable(),
     ):
-        type = message_chunk.type
-        if type == "AIMessageChunk" and message_chunk.content:
+        chunk_type = message_chunk.type
+        if chunk_type == "AIMessageChunk" and message_chunk.content:
             yield message_chunk.content
+        elif chunk_type == "tool":
+            docs: list[DocumentFound] = message_chunk.artifact
+            docs_as_json = [asdict(doc) for doc in docs]
+            yield json.dumps(docs_as_json)
 
 
 GRAPH = create_graph()
