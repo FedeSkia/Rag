@@ -112,7 +112,7 @@ async def launch_graph(input_message: str, config: GraphRunConfig) -> AsyncGener
         elif chunk_type == "tool":
             docs: list[DocumentFound] = message_chunk.artifact
             docs_as_json = [asdict(doc) for doc in docs]
-            yield json.dumps(docs_as_json)
+            yield "TOOL_MSG:" + json.dumps(docs_as_json)
 
 
 GRAPH = create_graph()
