@@ -1,6 +1,7 @@
 import json
 import logging
 from dataclasses import asdict
+from datetime import datetime, timezone
 from typing import Any, AsyncGenerator
 
 from langchain_core.messages import SystemMessage, HumanMessage
@@ -19,6 +20,21 @@ from rag_app.retrieval.pdf_retriever import pdf_retriever, DocumentFound
 logger = logging.getLogger(__name__)
 
 
+def add_messages(state: State, new_messages: list, config: RunnableConfig) -> State:
+    interaction_id = GraphRunConfig.from_runnable(config).interaction_id
+    enriched_messages = []
+    for message in new_messages:
+        # Ensure additional_kwargs exists
+        if not hasattr(message, "additional_kwargs") or message.additional_kwargs is None:
+            message.additional_kwargs = {}
+        # Inject interaction_id
+        message.additional_kwargs["interaction_id"] = interaction_id
+        message.additional_kwargs["timestamp"] = datetime.now(timezone.utc).isoformat()
+        enriched_messages.append(message)
+    state["messages"].extend(enriched_messages)
+    return state
+
+
 @tool("retrieve_documents", response_format="content_and_artifact")
 def retrieve(query: str, config: RunnableConfig):
     """ Retrieves documents from a user's collection. Use this to answer user query """
@@ -34,12 +50,13 @@ def query_or_respond(state: State, config: RunnableConfig):
     llm_with_tools = chat_model.bind_tools([retrieve])
 
     response = llm_with_tools.invoke(state["messages"])
+    state = add_messages(state, [response], config)
     store_user_conversation_history(config=GraphRunConfig.from_runnable(config))
-    return {"messages": [response]}
+    return {"messages": state["messages"]}
 
 
 # Step 3: Generate a response using the retrieved content.
-def generate(state: State):
+def generate(state: State, config: RunnableConfig):
     """Generate answer."""
     # Get generated ToolMessages
     recent_tool_messages = []
@@ -72,7 +89,8 @@ def generate(state: State):
     # Run
     chat_model = get_llm()
     response = chat_model.invoke(prompt)
-    return {"messages": [response]}
+    state = add_messages(state, [response], config)
+    return {"messages": state["messages"]}
 
 
 def create_graph() -> CompiledStateGraph:
@@ -96,11 +114,12 @@ def create_graph() -> CompiledStateGraph:
 
 async def launch_graph(input_message: str, config: GraphRunConfig) -> AsyncGenerator[Any, Any]:
     initial_state: State = {
-        "messages": [HumanMessage(content=input_message)]
+        "messages": [HumanMessage(content=input_message,
+                                  additional_kwargs={"interaction_id": config.interaction_id,
+                                                     "timestamp": datetime.now(timezone.utc).isoformat()}
+                                  )],
     }
     # Debug history.
-    # state_snapshot = graph.get_state(config=config.to_runnable())
-    # print("Recovered messages:", len(state_snapshot.values.get("messages", [])))
     for message_chunk, metadata in GRAPH.stream(
             input=initial_state,
             stream_mode="messages",

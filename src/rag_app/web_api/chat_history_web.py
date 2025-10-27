@@ -1,4 +1,5 @@
 import logging
+import uuid
 from datetime import datetime
 from typing import Optional, List
 from uuid import uuid4
@@ -44,6 +45,8 @@ async def get_user_conversation_history(user_id: str = Depends(JWTBearer())) -> 
 class ChatHistoryThread(BaseModel):
     type: str = Field(..., min_length=1)
     content: str = Field(..., min_length=1)
+    interaction_id: str = Field(..., min_length=1)
+    timestamp: datetime = Field(...)
 
 
 @chat_router.get("/get_user_conversation_thread")
@@ -59,9 +62,11 @@ async def get_user_conversation_thread(
     thread_history: List[ChatHistoryThread] = []
     for msg in msgs:
         if msg.type == "tool":
-           continue
+            continue
         else:
-            thread_history.append(ChatHistoryThread(type=getattr(msg, "type", ""), content=getattr(msg, "content", "")))
+            thread_history.append(ChatHistoryThread(type=getattr(msg, "type", ""), content=getattr(msg, "content", ""),
+                                                    interaction_id=msg.additional_kwargs.get("interaction_id"),
+                                                    timestamp=msg.additional_kwargs.get("timestamp")))
     return thread_history
 
 
@@ -87,7 +92,7 @@ async def invoke(
         user_id: str = Depends(JWTBearer()),
 ):
     thread_id = x_thread_id or str(uuid4())  # generate per request if absent
-    cfg = GraphRunConfig.from_headers(thread_id=thread_id, user_id=user_id)
+    cfg = GraphRunConfig.from_headers(thread_id=thread_id, user_id=user_id, interaction_id=uuid.uuid4().__str__())
     stream = launch_graph(input_message=data.content, config=cfg)
 
     return StreamingResponse(
