@@ -68,15 +68,19 @@ def generate(state: State, config: RunnableConfig):
     tool_message = recent_tool_messages[::-1]
 
     # Format into prompt
-    docs_content = "\n\n".join(doc.page_content for doc in tool_message[0].artifact)
+    documents: DocumentFound = tool_message[0].artifact
+    docs_as_json = [asdict(doc) for doc in documents]
+    retrieved_documents_as_json_for_llm = json.dumps(docs_as_json)
+
     system_message_content = (
         "You are an assistant for question-answering tasks. "
         "Use the following pieces of retrieved context to answer "
         "the question. If you don't know the answer, say that you "
-        "don't know. Use three sentences maximum and keep the "
+        "don't know. You can specify the page number and the document name."
+        " Use three sentences maximum and keep the "
         "answer concise."
         "\n\n"
-        f"{docs_content}"
+        f"{retrieved_documents_as_json_for_llm}"
     )
     conversation_messages = [
         message
