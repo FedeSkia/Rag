@@ -167,6 +167,70 @@ Copy `.env.example` to `.env.local` and configure:
 2. Obtain a JWT from Supabase GoTrue (`POST http://localhost:9999/token?grant_type=password`)
 3. Pass the JWT as `Authorization: Bearer <token>` on all `/api/chat` and `/api/document` endpoints
 
+## AWS Deployment (ECS + ECR)
+
+The project includes three shell scripts to build, push, and deploy Docker images to AWS ECR and trigger ECS redeployments. All scripts live in the project root and share the same ECR repository (`rag-app`) with different image tags.
+
+### Prerequisites
+
+- AWS CLI configured with credentials that have ECR and ECS permissions
+- Docker running locally
+- An existing ECS cluster and service already provisioned
+
+### Deployment Scripts
+
+| Script | Image Built | ECR Tag | ECS Service Updated |
+|---|---|---|---|
+| `push-rag-image.sh` | FastAPI RAG app (`docker/rag_app/Dockerfile`) | `rag-langchain-app-latest` | `rag-app-task` |
+| `push-ollama-image.sh` | Ollama LLM server (`docker/ollama/Dockerfile`) | `rag-langchain-ollama-latest` | `rag-app-task` |
+| `push-vllm-image.sh` | vLLM server (`docker/VLLM/Dockerfile`) | `rag-langchain-vllm-latest` | `rag-app-task` |
+
+Each script performs the same workflow:
+1. Build the Docker image for `linux/amd64`
+2. Authenticate to AWS ECR via `aws ecr get-login-password`
+3. Delete the existing image tag in ECR (if present)
+4. Tag and push the new image to ECR
+5. Force a new deployment on the ECS service
+
+### Environment Variables
+
+All scripts accept overrides via environment variables:
+
+| Variable | Default | Description |
+|---|---|---|
+| `AWS_REGION` | `eu-west-1` | AWS region for ECR and ECS |
+| `AWS_ACCOUNT_ID` | *(required)* | Your AWS account ID |
+| `ECR_REPOSITORY` | `rag-app` | ECR repository name (shared across all images) |
+| `CLUSTER_NAME` | `my-rag-app-cluster` | ECS cluster name |
+| `SERVICE_NAME` | `rag-app-task` | ECS service name to redeploy |
+
+### Usage
+
+```bash
+# Deploy the RAG app
+AWS_ACCOUNT_ID=<your-account-id> ./push-rag-image.sh
+
+# Deploy Ollama
+AWS_ACCOUNT_ID=<your-account-id> ./push-ollama-image.sh
+
+# Deploy vLLM (alternative to Ollama, GPU-based)
+AWS_ACCOUNT_ID=<your-account-id> ./push-vllm-image.sh
+```
+
+### vLLM vs Ollama
+
+The project supports two LLM backends:
+- **Ollama** — lightweight, CPU-friendly, auto-pulls models on startup (`qwen3:0.6b`, `nomic-embed-text`)
+- **vLLM** — GPU-optimized OpenAI-compatible server, uses `Qwen/Qwen2.5-3B-Instruct` by default, requires a HuggingFace token at build time (`--secret id=hf_token`)
+
+## Testing
+
+```bash
+poetry run pytest -v
+```
+
+Tests cover configuration parsing, document coalescing logic, PDF store helpers, graph configuration, JWT validation, admin JWT minting, retriever data models, and Pydantic model validation. No running infrastructure required.
+
 ## License
 
 Private project.
