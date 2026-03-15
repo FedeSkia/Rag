@@ -44,7 +44,6 @@ COPY pyproject.toml ./
 COPY README.md ./
 COPY src /app/src
 
-RUN poetry lock
 RUN poetry install --no-ansi --only main
 
 # ---- Default entrypoint ----

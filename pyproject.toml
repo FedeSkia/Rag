@@ -34,7 +34,8 @@ beautifulsoup4 = "~=4.13.4"
 unstructured = { version = "*", extras = ["local-inference", "pii"] }
 pillow = "*"
 pytesseract = "*"
-camelot-py = { version = "*", extras = ["cv"] }
+camelot-py = "*"
+opencv-python-headless = "*"
 sentence-transformers = "*"
 pyjwt = "^2.10.1"
 

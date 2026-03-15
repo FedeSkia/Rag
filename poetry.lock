@@ -387,13 +387,10 @@ files = [
 [package.dependencies]
 chardet = ">=3.0.4"
 click = ">=6.7"
-ghostscript = {version = ">=0.7", optional = true, markers = "extra == \"cv\""}
 numpy = ">=1.13.3"
-opencv-python = {version = ">=3.4.2.17", optional = true, markers = "extra == \"cv\""}
 openpyxl = ">=2.5.8"
 pandas = ">=0.23.4"
 "pdfminer.six" = ">=20200726"
-pdftopng = {version = ">=0.2.3", optional = true, markers = "extra == \"cv\""}
 pypdf = ">=3.0.0"
 tabulate = ">=0.8.9"
 
@@ -1248,17 +1245,6 @@ test = ["aiohttp (!=4.0.0a0,!=4.0.0a1)", "numpy", "pytest", "pytest-asyncio (!=0
 test-downstream = ["aiobotocore (>=2.5.4,<3.0.0)", "dask[dataframe,test]", "moto[server] (>4,<5)", "pytest-timeout", "xarray"]
 test-full = ["adlfs", "aiohttp (!=4.0.0a0,!=4.0.0a1)", "backports-zstd", "cloudpickle", "dask", "distributed", "dropbox", "dropboxdrivefs", "fastparquet", "fusepy", "gcsfs", "jinja2", "kerchunk", "libarchive-c", "lz4", "notebook", "numpy", "ocifs", "pandas (<3.0.0)", "panel", "paramiko", "pyarrow", "pyarrow (>=1)", "pyftpdlib", "pygit2", "pytest", "pytest-asyncio (!=0.22.0)", "pytest-benchmark", "pytest-cov", "pytest-mock", "pytest-recording", "pytest-rerunfailures", "python-snappy", "requests", "smbprotocol", "tqdm", "urllib3", "zarr", "zstandard"]
 tqdm = ["tqdm"]
-
-[[package]]
-name = "ghostscript"
-version = "0.8.1"
-description = "Interface to the Ghostscript C-API, both high- and low-level, based on ctypes"
-optional = false
-python-versions = "*"
-files = [
-    {file = "ghostscript-0.8.1-py3-none-any.whl", hash = "sha256:a801d1f0e3321d87c394d8c8f7d38e413692474c8a5cab7673b1b7f3a2c4b811"},
-    {file = "ghostscript-0.8.1.tar.gz", hash = "sha256:7cfa85d201036bf87890e425b4a0cdc9749abc4670a4492ae2aa66ad792b1388"},
-]
 
 [[package]]
 name = "google-api-core"
@@ -2625,8 +2611,8 @@ files = [
 
 [package.dependencies]
 numpy = [
-    {version = ">=1.23.3", markers = "python_version >= \"3.11\" and python_version < \"3.12\""},
     {version = ">=1.26.0", markers = "python_version >= \"3.12\" and python_version < \"3.13\""},
+    {version = ">=1.23.3", markers = "python_version >= \"3.11\" and python_version < \"3.12\""},
     {version = ">=2.1.0", markers = "python_version >= \"3.13\""},
 ]
 
@@ -3333,6 +3319,26 @@ files = [
 numpy = {version = ">=2", markers = "python_version >= \"3.9\""}
 
 [[package]]
+name = "opencv-python-headless"
+version = "4.13.0.92"
+description = "Wrapper package for OpenCV python bindings."
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "opencv_python_headless-4.13.0.92-cp37-abi3-macosx_13_0_arm64.whl", hash = "sha256:1a7d040ac656c11b8c38677cc8cccdc149f98535089dbe5b081e80a4e5903209"},
+    {file = "opencv_python_headless-4.13.0.92-cp37-abi3-macosx_14_0_x86_64.whl", hash = "sha256:3e0a6f0a37994ec6ce5f59e936be21d5d6384a4556f2d2da9c2f9c5dc948394c"},
+    {file = "opencv_python_headless-4.13.0.92-cp37-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:5c8cfc8e87ed452b5cecb9419473ee5560a989859fe1d10d1ce11ae87b09a2cb"},
+    {file = "opencv_python_headless-4.13.0.92-cp37-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:0525a3d2c0b46c611e2130b5fdebc94cf404845d8fa64d2f3a3b679572a5bd22"},
+    {file = "opencv_python_headless-4.13.0.92-cp37-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:eb60e36b237b1ebd40a912da5384b348df8ed534f6f644d8e0b4f103e272ba7d"},
+    {file = "opencv_python_headless-4.13.0.92-cp37-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:0bd48544f77c68b2941392fcdf9bcd2b9cdf00e98cb8c29b2455d194763cf99e"},
+    {file = "opencv_python_headless-4.13.0.92-cp37-abi3-win32.whl", hash = "sha256:a7cf08e5b191f4ebb530791acc0825a7986e0d0dee2a3c491184bd8599848a4b"},
+    {file = "opencv_python_headless-4.13.0.92-cp37-abi3-win_amd64.whl", hash = "sha256:77a82fe35ddcec0f62c15f2ba8a12ecc2ed4207c17b0902c7a3151ae29f37fb6"},
+]
+
+[package.dependencies]
+numpy = {version = ">=2", markers = "python_version >= \"3.9\""}
+
+[[package]]
 name = "openpyxl"
 version = "3.1.5"
 description = "A Python library to read/write Excel 2010 xlsx/xlsm files"
@@ -3620,31 +3626,6 @@ cryptography = ">=36.0.0"
 
 [package.extras]
 image = ["Pillow"]
-
-[[package]]
-name = "pdftopng"
-version = "0.2.4"
-description = "A PDF to PNG conversion library."
-optional = false
-python-versions = "*"
-files = [
-    {file = "pdftopng-0.2.4-cp310-cp310-macosx_14_0_arm64.whl", hash = "sha256:aef365311ad3d004f168fd073b649c56c3751b1eaeb244435e3d030f203a8843"},
-    {file = "pdftopng-0.2.4-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:adabef595cfc92ded5702321424e7ecb93e4b60ab4772b11cd95d3693374441f"},
-    {file = "pdftopng-0.2.4-cp311-cp311-macosx_14_0_arm64.whl", hash = "sha256:d28cfe4104425389a73d7d16d3fe41d8343c8764327379b042d917a403ca8858"},
-    {file = "pdftopng-0.2.4-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:2b30a4de9621c9897ce0c57ad31b524ecc5afaa9c46fdb9f4ca3512b18b6db56"},
-    {file = "pdftopng-0.2.4-cp312-cp312-macosx_14_0_arm64.whl", hash = "sha256:9fc33998b128305b5b538f2dfc25f0bb8b409f9e8d494decbee3cc1849f0387b"},
-    {file = "pdftopng-0.2.4-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:1b37636cd82628b32fec81f346385529aa424a828bfdf65620591fbc2faceb8f"},
-    {file = "pdftopng-0.2.4-cp313-cp313-macosx_14_0_arm64.whl", hash = "sha256:90cd960223bc66cf207e74b3c9dbfa29277c7dd4b8a6d9d9426236b5c46b8633"},
-    {file = "pdftopng-0.2.4-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6df005d3598a1e887f25d9aabc99f9f65fb21c5fd9c06a035585b4dc9e942a03"},
-    {file = "pdftopng-0.2.4-cp39-cp39-macosx_14_0_arm64.whl", hash = "sha256:181a009af9718279df199a463c76c22b8608140a7ede6ad22d35b13445026750"},
-    {file = "pdftopng-0.2.4-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:796ea70825129fa50ed31ac2f51c66412d9b64e88f8f8bc981edaa7fe6585bd9"},
-]
-
-[package.dependencies]
-Click = ">=7.0"
-
-[package.extras]
-dev = ["Click (>=7.0)", "Pillow (>=8.2.0)", "pytest (>=6.2.3)", "pytest-cov (>=2.11.1)"]
 
 [[package]]
 name = "pgvector"
@@ -6728,4 +6709,4 @@ cffi = ["cffi (>=1.17,<2.0)", "cffi (>=2.0.0b)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "905269fb2b3742fb1b9b677f6755f72af7659a7beb2ad16bfc8b1ff7fc5efced"
+content-hash = "d28e6e31b83ea7bb53cf3d56b56599dfde52b19d264d4b942a9dfa6a92755d67"
